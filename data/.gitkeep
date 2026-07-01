@@ -1,1 +1,1 @@
-# Keeps the runtime data directory in source control.
+# 保留运行时数据目录本身，实际业务数据由 .gitignore 排除。

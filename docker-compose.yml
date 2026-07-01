@@ -13,6 +13,7 @@ services:
       CORS_ORIGINS: "http://localhost:8000"
     volumes:
       - ./data:/app/data
+    # 使用 Python 标准库探活，避免为健康检查额外安装 curl。
     healthcheck:
       test:
         [

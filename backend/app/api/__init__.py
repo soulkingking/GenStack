@@ -1,1 +1,1 @@
-"""Public API routers."""
+"""对外 API 路由。"""

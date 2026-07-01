@@ -2,6 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# 默认值与 Dockerfile 保持一致；调用方可通过同名环境变量切换到官方源。
 NODE_IMAGE="${NODE_IMAGE:-docker.m.daocloud.io/library/node:22-bookworm-slim}"
 PYTHON_IMAGE="${PYTHON_IMAGE:-docker.m.daocloud.io/library/python:3.11-slim-bookworm}"
 NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmmirror.com}"

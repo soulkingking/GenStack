@@ -1,4 +1,4 @@
-# Python
+# Python 生成文件
 __pycache__/
 *.py[cod]
 .venv/
@@ -6,20 +6,20 @@ venv/
 *.egg-info/
 .pytest_cache/
 
-# Node
+# Node 与前端构建产物
 node_modules/
 dist/
 coverage/
 *.tsbuildinfo
 *.local
 
-# Data and secrets
+# 运行数据与敏感配置
 data/*
 !data/.gitkeep
 .env
 .env.local
 
-# IDE and operating system
+# IDE 与操作系统文件；以下 VS Code 配置属于团队共享运行约定。
 .idea/
 .vscode/*
 !.vscode/launch.json

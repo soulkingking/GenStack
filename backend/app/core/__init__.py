@@ -1,1 +1,1 @@
-"""Shared application configuration and metadata."""
+"""应用共享配置与元数据。"""

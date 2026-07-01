@@ -13,5 +13,5 @@ def _read_version_file() -> str:
     return raw_version.splitlines()[0].strip() if raw_version else ""
 
 
-# Source archives may omit VERSION, so development imports need an explicit fallback.
+# 源码归档可能不包含 VERSION，因此导入阶段必须提供明确的开发版本兜底值。
 APP_VERSION = _read_version_file() or "0.0.0-dev"

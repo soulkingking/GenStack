@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
+// 根目录 VERSION 是前后端共享的版本唯一来源，构建时注入供接口不可用时兜底展示。
 const version =
   readFileSync(join(currentDirectory, "..", "VERSION"), "utf8").trim().split("\n")[0]?.trim() ||
   "0.0.0-dev";

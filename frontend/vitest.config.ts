@@ -7,6 +7,7 @@ const currentDirectory = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   define: {
+    // 测试环境不执行 Vite 生产构建，需要显式提供编译期版本常量。
     __APP_VERSION__: JSON.stringify("0.1.0-test"),
   },
   plugins: [react()],

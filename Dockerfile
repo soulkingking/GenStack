@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Domestic mirrors are defaults for fast local builds; every value remains
-# overridable so CI and international environments can use official sources.
+# 国内镜像作为默认值加速本地构建；所有参数均可覆盖，CI 或海外环境可切回官方源。
 ARG NODE_IMAGE=docker.m.daocloud.io/library/node:22-bookworm-slim
 ARG PYTHON_IMAGE=docker.m.daocloud.io/library/python:3.11-slim-bookworm
 
@@ -9,8 +8,7 @@ FROM ${NODE_IMAGE} AS frontend-build
 ARG NPM_REGISTRY=https://registry.npmmirror.com
 WORKDIR /build/frontend
 
-# npm only bootstraps the project-pinned pnpm version; application dependencies
-# continue to be resolved exclusively from pnpm-lock.yaml.
+# npm 仅用于安装项目锁定的 pnpm 版本，应用依赖仍完全以 pnpm-lock.yaml 为准。
 RUN npm install --global "pnpm@10.33.2" --registry="${NPM_REGISTRY}"
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --registry="${NPM_REGISTRY}"
@@ -30,8 +28,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/backend \
     TZ=${TZ}
 
-# Debian slim variants may use either legacy sources.list or deb822 sources.
-# Update both forms before installing timezone data, then remove apt metadata.
+# Debian slim 镜像可能使用旧版 sources.list 或 deb822 sources，需同时兼容两种格式。
+# 安装时区数据后删除 apt 索引，避免把仅构建期使用的缓存带入最终镜像。
 RUN set -eux; \
     if [ -f /etc/apt/sources.list ]; then \
       sed -i \

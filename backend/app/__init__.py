@@ -1,1 +1,1 @@
-"""GenStack backend application package."""
+"""GenStack 后端应用包。"""

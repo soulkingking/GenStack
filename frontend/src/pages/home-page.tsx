@@ -57,7 +57,7 @@ export function HomePage() {
             <Button
               variant="outline"
               onClick={() => {
-                // Both requests are independent, so refresh them together without blocking the click.
+                // 两个接口互不依赖，并行刷新可避免串行等待，同时不阻塞点击事件。
                 void Promise.all([health.refetch(), meta.refetch()]);
               }}
             >

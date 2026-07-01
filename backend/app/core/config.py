@@ -3,12 +3,13 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# 始终从仓库根目录读取 .env 和 data，使本地运行与容器目录约定保持一致。
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 _DEFAULT_SQLITE_URL = f"sqlite:///{(_REPOSITORY_ROOT / 'data' / 'app.db').as_posix()}"
 
 
 class Settings(BaseSettings):
-    """Runtime settings loaded from process environment and the repository .env."""
+    """从进程环境变量和仓库根目录 .env 加载运行时配置。"""
 
     model_config = SettingsConfigDict(
         env_file=str(_REPOSITORY_ROOT / ".env"),
@@ -23,13 +24,13 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        """Return normalized, non-empty browser origins for CORS middleware."""
+        """返回供 CORS 中间件使用的已清理非空来源列表。"""
 
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return the process-wide immutable settings instance."""
+    """返回进程内复用的不可变配置实例。"""
 
     return Settings()

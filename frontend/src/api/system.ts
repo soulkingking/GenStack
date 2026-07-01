@@ -7,6 +7,7 @@ export interface ApplicationMeta {
   version: string;
 }
 
+// 系统接口共享相同的 JSON 与错误契约，避免页面层重复处理 HTTP 状态。
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(path, {
     headers: { Accept: "application/json" },

@@ -5,6 +5,6 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 def health() -> dict[str, str]:
-    """Report that the API process can accept requests."""
+    """返回 API 进程是否能够接收请求。"""
 
     return {"status": "ok"}

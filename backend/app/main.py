@@ -23,14 +23,13 @@ app.include_router(health.router, prefix="/api")
 
 @app.get("/api/meta")
 def meta() -> dict[str, str]:
-    """Expose non-sensitive application identity to the frontend."""
+    """向前端暴露不含敏感信息的应用名称与版本。"""
 
     return {"name": APP_NAME, "version": APP_VERSION}
 
 
 _repository_root = Path(__file__).resolve().parents[2]
 _static_directory = _repository_root / "static"
-# The frontend build only exists in the production image; local Vite development
-# must leave FastAPI's own root unmounted.
+# 前端产物只存在于生产镜像；本地使用 Vite 时不能占用 FastAPI 根路径。
 if _static_directory.is_dir():
     app.mount("/", StaticFiles(directory=str(_static_directory), html=True), name="static")

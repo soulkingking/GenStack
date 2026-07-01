@@ -54,7 +54,6 @@ bash scripts/start-frontend.sh
 ```bash
 (cd backend && .venv/bin/pytest -q)
 corepack pnpm --dir frontend check
-node --test scripts/project-config.test.mjs
 docker compose config --quiet
 ```
 

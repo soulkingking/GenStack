@@ -16,6 +16,8 @@
   `pytest` console script and `python -m pytest` resolve `app` consistently under Pytest 9.
 - The host has no Docker CLI, so static configuration checks passed but image construction
   and container timezone inspection were not run locally.
+- `scripts/project-config.test.mjs` was removed after implementation at the user's request;
+  the task sections below retain the original test-first execution record.
 
 ---
 

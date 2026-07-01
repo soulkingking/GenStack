@@ -8,6 +8,17 @@
 
 **Tech Stack:** Python 3.11, FastAPI, pydantic-settings, React 19, Vite 8, TypeScript 6, pnpm, Tailwind CSS 4, shadcn/ui primitives, TanStack Query, React Router, Vitest, Testing Library, Docker Compose
 
+## Implementation notes
+
+- Completed inline on 2026-07-01; the original untracked workspace was deleted without backup as approved.
+- Python 3.11 was selected through `uv` because the interpreter was installed but not on `PATH`.
+- Backend contract tests use HTTPX `ASGITransport` because current Starlette deprecates its HTTPX-backed `TestClient`.
+- TypeScript 6 no longer needs the deprecated `baseUrl` option for the configured `paths` mapping.
+- Fixed server ports remain launch-script and container contracts; ineffective `APP_HOST` and `APP_PORT`
+  settings from the reference template were intentionally omitted.
+- The local environment had no Docker CLI. Compose YAML was parsed successfully, but image construction
+  and container smoke tests remain to be run on a Docker-enabled machine.
+
 ---
 
 ## File map

@@ -1,0 +1,30 @@
+name: genstack
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: genstack:latest
+    ports:
+      - "8000:8000"
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "8000"
+      APP_DEBUG: "false"
+      CORS_ORIGINS: "http://localhost:8000"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped

@@ -52,19 +52,50 @@ bash scripts/start-frontend.sh
 ## 验证
 
 ```bash
-PYTHONPATH=backend backend/.venv/bin/pytest backend/tests -q
+(cd backend && .venv/bin/pytest -q)
 corepack pnpm --dir frontend check
+node --test scripts/project-config.test.mjs
 docker compose config --quiet
 ```
 
 ## Docker
+
+默认使用 DaoCloud 基础镜像、npmmirror、阿里云 PyPI 和清华 Debian 源：
 
 ```bash
 bash scripts/package.sh
 docker compose up -d
 ```
 
-访问 <http://127.0.0.1:8000>。容器内由 FastAPI 同时提供静态页面和 API。
+访问 <http://127.0.0.1:8000>。容器内由 FastAPI 同时提供静态页面和 API，系统时区
+默认为 `Asia/Shanghai`。
+
+需要切回官方源时：
+
+```bash
+NODE_IMAGE=node:22-bookworm-slim \
+PYTHON_IMAGE=python:3.11-slim-bookworm \
+NPM_REGISTRY=https://registry.npmjs.org \
+PIP_INDEX_URL=https://pypi.org/simple \
+DEBIAN_MIRROR=deb.debian.org \
+TZ=UTC \
+bash scripts/package.sh
+```
+
+所有变量都只影响本次构建，不会写入仓库配置。
+
+## VS Code
+
+首次使用前完成本地依赖安装，然后接受工作区推荐扩展。运行和调试面板提供：
+
+- `Python: FastAPI (后端)`：稳定断点调试；
+- `Python: FastAPI (后端, 热重载)`：后端热更新；
+- `pnpm: 前端开发 (Vite)`：启动 React 开发服务器；
+- `Chrome: 前端页面`：连接前端源码调试；
+- `全栈: 后端调试 + Vite`：同时启动前后端。
+
+启动配置会先清理固定端口 `8000` 或 `5173`。Chrome 配置应在 Vite 就绪后单独启动，
+避免浏览器和开发服务器启动竞态。
 
 ## 文档
 

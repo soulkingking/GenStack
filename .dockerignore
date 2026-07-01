@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+.vscode
+.env
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+**/dist
+**/coverage
+data/*
+!data/.gitkeep
+docs
+release-notes

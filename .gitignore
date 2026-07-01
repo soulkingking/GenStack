@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+coverage/
+*.local
+
+# Data and secrets
+data/*
+!data/.gitkeep
+.env
+.env.local
+
+# IDE and operating system
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+.DS_Store
+*.swp

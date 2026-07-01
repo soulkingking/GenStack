@@ -8,6 +8,15 @@
 
 **Tech Stack:** Dockerfile 1.x, Docker Compose, Bash, Node.js built-in test runner, VS Code launch/tasks schema, debugpy, pnpm, Vite, FastAPI
 
+## Implementation notes
+
+- Completed inline on 2026-07-01.
+- VS Code pytest discovery uses `backend/` as its working directory and `tests` as its target.
+- `backend/pytest.ini` explicitly adds the backend root to Python's import path so both the
+  `pytest` console script and `python -m pytest` resolve `app` consistently under Pytest 9.
+- The host has no Docker CLI, so static configuration checks passed but image construction
+  and container timezone inspection were not run locally.
+
 ---
 
 ## File map
@@ -19,6 +28,7 @@
 - `.vscode/settings.json`: Python interpreter, analysis, and pytest discovery.
 - `.vscode/tasks.json`: macOS fixed-port cleanup tasks.
 - `.vscode/launch.json`: FastAPI, Vite, Chrome, and compound configurations.
+- `backend/pytest.ini`: consistent backend import path for terminal and VS Code pytest entry points.
 - `.gitignore`: permits all four shared VS Code files.
 - `README.md`: Docker source overrides and VS Code usage.
 - `docs/调试标准.md`: stable launch names and debugging sequence.
@@ -252,6 +262,8 @@ test("VS Code exposes backend, frontend, browser, and full-stack launches", asyn
     "${workspaceFolder}/backend/.venv/bin/python",
   );
   assert.equal(settings["python.testing.pytestEnabled"], true);
+  assert.equal(settings["python.testing.cwd"], "${workspaceFolder}/backend");
+  assert.deepEqual(settings["python.testing.pytestArgs"], ["tests"]);
 
   assert.deepEqual(
     tasks.tasks.map(({ label }) => label),
@@ -291,6 +303,7 @@ Expected: Docker test passes; VS Code test fails with `ENOENT` for `.vscode/exte
 - Create: `.vscode/settings.json`
 - Create: `.vscode/tasks.json`
 - Create: `.vscode/launch.json`
+- Create: `backend/pytest.ini`
 - Modify: `.gitignore`
 - Test: `scripts/project-config.test.mjs`
 
@@ -319,12 +332,22 @@ Create `.vscode/settings.json`:
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
   "python.analysis.extraPaths": ["${workspaceFolder}/backend"],
   "python.testing.pytestEnabled": true,
-  "python.testing.pytestArgs": ["backend/tests"],
-  "python.testing.cwd": "${workspaceFolder}"
+  "python.testing.pytestArgs": ["tests"],
+  "python.testing.cwd": "${workspaceFolder}/backend"
 }
 ```
 
-- [ ] **Step 3: Add macOS port cleanup tasks**
+- [ ] **Step 3: Stabilize pytest imports**
+
+Create `backend/pytest.ini`:
+
+```ini
+[pytest]
+pythonpath = .
+testpaths = tests
+```
+
+- [ ] **Step 4: Add macOS port cleanup tasks**
 
 Create `.vscode/tasks.json`:
 
@@ -366,7 +389,7 @@ Create `.vscode/tasks.json`:
 }
 ```
 
-- [ ] **Step 4: Add launch and compound configurations**
+- [ ] **Step 5: Add launch and compound configurations**
 
 Create `.vscode/launch.json`:
 
@@ -433,7 +456,7 @@ Create `.vscode/launch.json`:
 }
 ```
 
-- [ ] **Step 5: Track the workspace settings**
+- [ ] **Step 6: Track the workspace settings**
 
 Add this line beneath the existing `.vscode` exceptions in `.gitignore`:
 
@@ -441,23 +464,24 @@ Add this line beneath the existing `.vscode` exceptions in `.gitignore`:
 !.vscode/settings.json
 ```
 
-- [ ] **Step 6: Run VS Code configuration tests**
+- [ ] **Step 7: Run VS Code configuration tests**
 
 Run:
 
 ```bash
 node --test scripts/project-config.test.mjs
 node -e 'for (const file of [".vscode/extensions.json", ".vscode/settings.json", ".vscode/tasks.json", ".vscode/launch.json"]) JSON.parse(require("node:fs").readFileSync(file, "utf8"))'
+(cd backend && .venv/bin/pytest -q)
 bash -lc 'pids=$(lsof -tiTCP:8000 -sTCP:LISTEN || true); if [ -n "$pids" ]; then exit 1; else echo "Port 8000 is free"; fi'
 bash -lc 'pids=$(lsof -tiTCP:5173 -sTCP:LISTEN || true); if [ -n "$pids" ]; then exit 1; else echo "Port 5173 is free"; fi'
 ```
 
 Expected: two Node tests pass, JSON parsing succeeds, and both unused-port checks print `is free`.
 
-- [ ] **Step 7: Commit VS Code configuration**
+- [ ] **Step 8: Commit VS Code configuration**
 
 ```bash
-git add .gitignore .vscode scripts/project-config.test.mjs
+git add .gitignore .vscode backend/pytest.ini scripts/project-config.test.mjs
 git commit -m "chore: add VS Code full-stack launch configuration"
 ```
 

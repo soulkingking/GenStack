@@ -25,5 +25,6 @@ data/*
 !.vscode/launch.json
 !.vscode/tasks.json
 !.vscode/extensions.json
+!.vscode/settings.json
 .DS_Store
 *.swp

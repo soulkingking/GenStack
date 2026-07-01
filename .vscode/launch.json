@@ -1,0 +1,60 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: FastAPI (后端)",
+      "type": "debugpy",
+      "request": "launch",
+      "preLaunchTask": "debug: kill backend port 8000",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: FastAPI (后端, 热重载)",
+      "type": "debugpy",
+      "request": "launch",
+      "preLaunchTask": "debug: kill backend port 8000",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "pnpm: 前端开发 (Vite)",
+      "type": "node-terminal",
+      "request": "launch",
+      "preLaunchTask": "debug: kill frontend port 5173",
+      "command": "corepack pnpm dev",
+      "cwd": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Chrome: 前端页面",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173",
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMaps": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "全栈: 后端调试 + Vite",
+      "configurations": ["Python: FastAPI (后端)", "pnpm: 前端开发 (Vite)"],
+      "stopAll": true,
+      "presentation": {
+        "group": "fullstack",
+        "order": 1
+      }
+    }
+  ]
+}

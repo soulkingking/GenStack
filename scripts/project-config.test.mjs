@@ -42,3 +42,47 @@ test("Docker build defaults to domestic mirrors and installs the runtime timezon
     assert.ok(packageScript.includes(expectedArgument), expectedArgument);
   }
 });
+
+test("VS Code exposes backend, frontend, browser, and full-stack launches", async () => {
+  const extensions = JSON.parse(await readRepositoryFile(".vscode/extensions.json"));
+  const settings = JSON.parse(await readRepositoryFile(".vscode/settings.json"));
+  const tasks = JSON.parse(await readRepositoryFile(".vscode/tasks.json"));
+  const launch = JSON.parse(await readRepositoryFile(".vscode/launch.json"));
+
+  assert.deepEqual(
+    new Set(extensions.recommendations),
+    new Set([
+      "ms-python.python",
+      "ms-python.debugpy",
+      "bradlc.vscode-tailwindcss",
+      "oxc.oxc-vscode",
+      "ms-azuretools.vscode-docker",
+    ]),
+  );
+  assert.equal(
+    settings["python.defaultInterpreterPath"],
+    "${workspaceFolder}/backend/.venv/bin/python",
+  );
+  assert.equal(settings["python.testing.pytestEnabled"], true);
+  assert.equal(settings["python.testing.cwd"], "${workspaceFolder}/backend");
+  assert.deepEqual(settings["python.testing.pytestArgs"], ["tests"]);
+
+  assert.deepEqual(
+    tasks.tasks.map(({ label }) => label),
+    ["debug: kill backend port 8000", "debug: kill frontend port 5173"],
+  );
+  assert.deepEqual(
+    launch.configurations.map(({ name }) => name),
+    [
+      "Python: FastAPI (后端)",
+      "Python: FastAPI (后端, 热重载)",
+      "pnpm: 前端开发 (Vite)",
+      "Chrome: 前端页面",
+    ],
+  );
+  assert.deepEqual(launch.compounds[0].configurations, [
+    "Python: FastAPI (后端)",
+    "pnpm: 前端开发 (Vite)",
+  ]);
+  assert.equal(launch.compounds[0].stopAll, true);
+});

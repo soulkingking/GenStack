@@ -14,10 +14,9 @@ class Settings(BaseSettings):
         env_file=str(_REPOSITORY_ROOT / ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
+        frozen=True,
     )
 
-    app_host: str = "0.0.0.0"
-    app_port: int = 8000
     app_debug: bool = False
     database_url: str = _DEFAULT_SQLITE_URL
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"

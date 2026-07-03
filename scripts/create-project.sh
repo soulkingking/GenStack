@@ -139,18 +139,20 @@ EOF
 }
 
 install_dependencies() {
-  echo "安装后端依赖 ..."
+  echo "[1/2] 安装后端依赖 ..."
   if command -v uv >/dev/null 2>&1; then
     uv venv --python 3.11 --seed "$TARGET/backend/.venv" || return 1
+    uv pip install --python "$TARGET/backend/.venv/bin/python" \
+      -r "$TARGET/backend/requirements-dev.txt" || return 1
   elif command -v python3.11 >/dev/null 2>&1; then
     python3.11 -m venv "$TARGET/backend/.venv" || return 1
+    "$TARGET/backend/.venv/bin/pip" install -r "$TARGET/backend/requirements-dev.txt" || return 1
   else
     echo "警告: 未找到 uv 或 python3.11，无法创建后端虚拟环境。" >&2
     return 1
   fi
-  "$TARGET/backend/.venv/bin/pip" install --quiet -r "$TARGET/backend/requirements-dev.txt" || return 1
 
-  echo "安装前端依赖 ..."
+  echo "[2/2] 安装前端依赖 ..."
   if ! command -v corepack >/dev/null 2>&1; then
     echo "警告: 未找到 corepack（需 Node.js >= 22），无法安装前端依赖。" >&2
     return 1

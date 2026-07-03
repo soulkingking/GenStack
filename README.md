@@ -52,9 +52,10 @@ npm create genstack@latest -- my-app
 三种方式最终都由 `scripts/create-project.sh` 完成：复制模板中受版本管理的文件
 （自动跳过 `.git`、依赖与构建产物），把 `GenStack`/`genstack` 全部替换为新项目名
 （`my-app` → 显示名 `MyApp`，同时用作 Docker 镜像名、Compose 项目名、pnpm scope
-和 Nacos 服务名），重置 VERSION 与 CHANGELOG，从 `.env.example` 生成 `.env`，并
-初始化全新的 git 仓库。生成后按「本地开发」章节安装依赖即可，注意检查 README
-描述与 `.env` 中的 Nacos、认证配置。模板仓库地址与分支可用环境变量
+和 Nacos 服务名），重置 VERSION 与 CHANGELOG，从 `.env.example` 生成 `.env`，
+初始化全新的 git 仓库，并自动安装前后端依赖（`--skip-install` 可跳过；工具缺失时
+回退为打印「本地开发」手动步骤）。完成后即可直接启动或在 VS Code 中 F5 调试，
+注意检查 README 描述与 `.env` 中的 Nacos、认证配置。模板仓库地址与分支可用环境变量
 `GENSTACK_REPO`、`GENSTACK_REF` 或 CLI 的 `--repo`、`--ref` 覆盖。脚手架自身
 （本节说明、`scripts/create-project.sh`、`packages/`、genstack skill）不会带入新项目。
 <!-- template-only:end -->

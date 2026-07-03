@@ -33,19 +33,17 @@ FastAPI 后端，可选 Nacos 注册，Docker 单镜像交付）。
    或（npm 已发布时）`npm create genstack@latest -- <name>`。
 
 target-dir 默认为当前目录下 `<name>/`，且不能位于模板仓库内部。脚本会替换全部
-项目标识、重置 VERSION/CHANGELOG、生成 .env 并初始化 git 仓库，无交互。
+项目标识、重置 VERSION/CHANGELOG、生成 .env、初始化 git 仓库，并自动安装前后端
+依赖（`--skip-install` 跳过），无交互。
 
 ## 创建后必做
 
 1. 按用户的项目描述改写新项目 `README.md` 的简介段落
 2. 核对 `.env`：`NACOS_ENABLED`（不用服务发现就设 false）、`NACOS_SERVER_ADDR`、
    `AUTH_USERNAME`/`AUTH_PASSWORD`
-3. 安装依赖并验证：
+3. 运行验证（依赖已自动安装；若被跳过或失败，先按新项目 README「本地开发」补装）：
 
    ```bash
-   uv venv --python 3.11 --seed backend/.venv
-   backend/.venv/bin/pip install -r backend/requirements-dev.txt
-   bash scripts/init-frontend.sh
    (cd backend && .venv/bin/pytest -q)
    corepack pnpm --dir frontend check
    ```

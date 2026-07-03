@@ -18,17 +18,20 @@ const USAGE = `用法: npm create genstack@latest -- <project-name> [target-dir]
 选项:
   --repo <url>     模板仓库地址（默认 ${DEFAULT_REPO}）
   --ref <ref>      模板分支或标签（默认 main）
+  --skip-install   只生成项目，跳过前后端依赖安装
   -h, --help       显示帮助
 `;
 
 function parseArgs(argv) {
-  const options = { repo: DEFAULT_REPO, ref: "main", positional: [] };
+  const options = { repo: DEFAULT_REPO, ref: "main", skipInstall: false, positional: [] };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "-h" || arg === "--help") {
       return { ...options, help: true };
     }
-    if (arg === "--repo" || arg === "--ref") {
+    if (arg === "--skip-install") {
+      options.skipInstall = true;
+    } else if (arg === "--repo" || arg === "--ref") {
       const value = argv[i + 1];
       if (!value) {
         throw new Error(`选项 ${arg} 缺少参数值`);
@@ -85,7 +88,8 @@ function main() {
       options.repo,
       join(cloneDir, "template"),
     ]);
-    run("bash", [join(cloneDir, "template", "scripts", "create-project.sh"), name, target]);
+    const scriptArgs = [join(cloneDir, "template", "scripts", "create-project.sh"), name, target];
+    run("bash", options.skipInstall ? [...scriptArgs, "--skip-install"] : scriptArgs);
   } finally {
     rmSync(cloneDir, { recursive: true, force: true });
   }

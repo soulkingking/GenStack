@@ -58,6 +58,19 @@ function run(command, args, options = {}) {
 }
 
 function main() {
+  if (process.platform === "win32") {
+    process.stderr.write(
+      "错误: GenStack 模板的开发流程基于 bash/unix 约定（bash 脚本、.venv/bin、lsof），\n" +
+        "不支持在 Windows 原生终端（PowerShell/CMD）中使用。请在 WSL 中执行：\n\n" +
+        "  wsl --install        # 首次安装 WSL（需管理员权限，装完重启）\n" +
+        "  wsl                  # 进入 WSL 终端\n" +
+        "  npm create genstack@latest -- my-app\n\n" +
+        "WSL 内需要 git、Node.js >= 22 与 Python 3.11（推荐再装 uv）。\n" +
+        "VS Code 可安装 WSL 扩展直接在 WSL 中开发调试。\n",
+    );
+    return 1;
+  }
+
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     process.stdout.write(USAGE);

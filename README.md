@@ -67,6 +67,9 @@ npm create genstack@latest -- my-app
 - Python 3.11（推荐配合 [uv](https://docs.astral.sh/uv/) 创建虚拟环境）
 - Node.js ≥ 22（自带 corepack，用于按 `packageManager` 版本运行 pnpm，无需全局安装 pnpm）
 - Docker（可选，仅打包镜像时需要）
+- Windows：请在 [WSL](https://learn.microsoft.com/windows/wsl/) 中开发——脚本、
+  虚拟环境路径（`.venv/bin`）与 VS Code 调试任务均基于 bash/unix 约定，
+  不支持 PowerShell/CMD 原生运行
 
 ### 安装依赖
 

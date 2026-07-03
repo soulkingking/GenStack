@@ -61,11 +61,25 @@ npm create genstack@latest -- my-app
 
 ## 本地开发
 
+### 环境要求
+
+- Python 3.11（推荐配合 [uv](https://docs.astral.sh/uv/) 创建虚拟环境）
+- Node.js ≥ 22（自带 corepack，用于按 `packageManager` 版本运行 pnpm，无需全局安装 pnpm）
+- Docker（可选，仅打包镜像时需要）
+
+### 安装依赖
+
 ```bash
+# 运行时配置
 cp .env.example .env
+
+# 后端依赖：创建虚拟环境并安装 Python 包
 uv venv --python 3.11 --seed backend/.venv
 backend/.venv/bin/pip install -r backend/requirements-dev.txt
+
+# 前端依赖：按 pnpm-lock.yaml 锁定版本安装 node 包
 bash scripts/init-frontend.sh
+# 等价于: corepack pnpm --dir frontend install --frozen-lockfile
 ```
 
 未安装 `uv` 时，可用系统 Python 3.11 创建虚拟环境：
@@ -73,6 +87,8 @@ bash scripts/init-frontend.sh
 ```bash
 python3.11 -m venv backend/.venv
 ```
+
+### 启动
 
 分别启动两个进程：
 

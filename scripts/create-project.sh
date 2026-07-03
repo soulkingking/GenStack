@@ -111,12 +111,12 @@ fi
 
 cat <<EOF
 
-完成。后续步骤:
+完成。后续步骤（需 Python 3.11 与 Node.js >= 22）:
 
   cd ${TARGET}
-  uv venv --python 3.11 --seed backend/.venv
-  backend/.venv/bin/pip install -r backend/requirements-dev.txt
-  bash scripts/init-frontend.sh
+  uv venv --python 3.11 --seed backend/.venv                     # 后端虚拟环境
+  backend/.venv/bin/pip install -r backend/requirements-dev.txt  # 后端依赖
+  bash scripts/init-frontend.sh                                  # 前端依赖（corepack pnpm 按锁文件安装）
   bash scripts/start-backend.sh   # 另开终端: bash scripts/start-frontend.sh
 
 请检查 README.md 的项目描述和 .env 中的 Nacos / 认证配置。

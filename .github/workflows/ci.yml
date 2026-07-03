@@ -30,6 +30,36 @@ jobs:
         working-directory: .
         run: docker compose config --quiet
 
+  # 端到端验证脚手架：生成项目、安装依赖、运行生成项目的后端测试。
+  scaffold:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv
+      - name: Configure git identity for generated repository
+        run: |
+          git config --global user.name ci
+          git config --global user.email ci@example.com
+      - name: Create project from local template
+        run: node packages/create-genstack/bin/create-genstack.mjs --template . ci-app ${{ runner.temp }}/ci-app
+      - name: Run generated project backend tests (unix)
+        if: runner.os != 'Windows'
+        working-directory: ${{ runner.temp }}/ci-app/backend
+        run: .venv/bin/pytest -q
+      - name: Run generated project backend tests (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ${{ runner.temp }}/ci-app/backend
+        run: .venv\Scripts\pytest -q
+
   frontend:
     strategy:
       matrix:

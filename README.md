@@ -27,6 +27,7 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 | 服务发现 | 可选 Nacos（nacos-sdk-python，默认关闭） |
 | 交付 | 多阶段 Dockerfile、Docker Compose |
 
+<!-- template-only:start -->
 ## 用模板创建新项目
 
 本地已有模板仓库时：
@@ -54,7 +55,9 @@ npm create genstack@latest -- my-app
 和 Nacos 服务名），重置 VERSION 与 CHANGELOG，从 `.env.example` 生成 `.env`，并
 初始化全新的 git 仓库。生成后按「本地开发」章节安装依赖即可，注意检查 README
 描述与 `.env` 中的 Nacos、认证配置。模板仓库地址与分支可用环境变量
-`GENSTACK_REPO`、`GENSTACK_REF` 或 CLI 的 `--repo`、`--ref` 覆盖。
+`GENSTACK_REPO`、`GENSTACK_REF` 或 CLI 的 `--repo`、`--ref` 覆盖。脚手架自身
+（本节说明、`scripts/create-project.sh`、`packages/`、genstack skill）不会带入新项目。
+<!-- template-only:end -->
 
 ## 本地开发
 

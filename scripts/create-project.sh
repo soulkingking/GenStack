@@ -78,9 +78,14 @@ git -C "$ROOT" ls-files -z --cached --others --exclude-standard \
   | tar -C "$ROOT" --null -T - -cf - \
   | tar -C "$TARGET" -xf -
 
-# 模板自身的开发文档、发布记录、脚手架 CLI 和脚手架 skill 不属于新项目。
+# 脚手架自身（本脚本、CLI、skill）与模板的开发文档、发布记录不属于新项目。
 rm -rf "$TARGET/docs/superpowers" "$TARGET/release-notes" "$TARGET/packages" \
-  "$TARGET/.claude/skills/genstack"
+  "$TARGET/.claude/skills/genstack" "$TARGET/scripts/create-project.sh"
+
+# 剥离文档中标记为「仅模板需要」的段落。
+grep -rIlF 'template-only:start' "$TARGET" | while IFS= read -r file; do
+  perl -0777 -pi -e 's/[ \t]*<!-- template-only:start -->.*?<!-- template-only:end -->\n*//gs' "$file"
+done
 
 # 替换项目标识：GenStack -> 显示名，genstack -> slug（仅处理文本文件）。
 grep -rIl -e genstack -e GenStack "$TARGET" | while IFS= read -r file; do

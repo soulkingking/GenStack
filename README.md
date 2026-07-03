@@ -27,6 +27,35 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 | 服务发现 | 可选 Nacos（nacos-sdk-python，默认关闭） |
 | 交付 | 多阶段 Dockerfile、Docker Compose |
 
+## 用模板创建新项目
+
+本地已有模板仓库时：
+
+```bash
+bash scripts/create-project.sh my-app ~/工作/项目/my-app
+```
+
+本地没有模板时，远程一行命令（脚本自举：先克隆模板再执行）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/soulkingking/GenStack/main/scripts/create-project.sh \
+  | bash -s -- my-app
+```
+
+或使用 npm（[packages/create-genstack](packages/create-genstack) 发布到 npm 后可用）：
+
+```bash
+npm create genstack@latest -- my-app
+```
+
+三种方式最终都由 `scripts/create-project.sh` 完成：复制模板中受版本管理的文件
+（自动跳过 `.git`、依赖与构建产物），把 `GenStack`/`genstack` 全部替换为新项目名
+（`my-app` → 显示名 `MyApp`，同时用作 Docker 镜像名、Compose 项目名、pnpm scope
+和 Nacos 服务名），重置 VERSION 与 CHANGELOG，从 `.env.example` 生成 `.env`，并
+初始化全新的 git 仓库。生成后按「本地开发」章节安装依赖即可，注意检查 README
+描述与 `.env` 中的 Nacos、认证配置。模板仓库地址与分支可用环境变量
+`GENSTACK_REPO`、`GENSTACK_REF` 或 CLI 的 `--repo`、`--ref` 覆盖。
+
 ## 本地开发
 
 ```bash

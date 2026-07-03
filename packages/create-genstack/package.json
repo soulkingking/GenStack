@@ -1,0 +1,28 @@
+{
+  "name": "create-genstack",
+  "version": "0.1.0",
+  "description": "Create a new project from the GenStack template (React 19 + FastAPI monorepo)",
+  "type": "module",
+  "bin": {
+    "create-genstack": "bin/create-genstack.mjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soulkingking/GenStack.git",
+    "directory": "packages/create-genstack"
+  },
+  "keywords": [
+    "genstack",
+    "scaffold",
+    "template",
+    "react",
+    "fastapi"
+  ],
+  "license": "Apache-2.0"
+}

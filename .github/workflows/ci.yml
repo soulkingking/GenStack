@@ -7,7 +7,11 @@ on:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    # Windows 为受支持的原生开发平台，与 Linux 一同验证。
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: backend
@@ -22,11 +26,15 @@ jobs:
       - run: pytest -q
       # 与 README 验证清单保持一致：交付配置的语法问题应在合并前暴露。
       - name: Validate Docker Compose config
+        if: runner.os == 'Linux'
         working-directory: .
         run: docker compose config --quiet
 
   frontend:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: frontend

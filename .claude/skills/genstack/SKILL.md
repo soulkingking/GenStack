@@ -17,20 +17,26 @@ FastAPI 后端，可选 Nacos 注册，Docker 单镜像交付）。
 
 ## 创建方式（按序尝试）
 
-1. 当前目录在模板仓库内（仓库根有 `scripts/create-project.sh`）：
+1. 当前目录在模板仓库内（仓库根有 `packages/create-genstack`）：
 
    ```bash
-   bash scripts/create-project.sh <name> [target-dir]
+   node packages/create-genstack/bin/create-genstack.mjs --template . <name> [target-dir]
    ```
 
-2. 否则远程自举：
+   （macOS/Linux 也可用 `bash scripts/create-project.sh <name> [target-dir]`）
+
+2. 否则（全平台，含 Windows 原生）：
+
+   ```bash
+   npm create genstack@latest -- <name> [target-dir]
+   ```
+
+   macOS/Linux 还可用远程自举：
 
    ```bash
    curl -fsSL https://raw.githubusercontent.com/soulkingking/GenStack/main/scripts/create-project.sh \
      | bash -s -- <name> [target-dir]
    ```
-
-   或（npm 已发布时）`npm create genstack@latest -- <name>`。
 
 target-dir 默认为当前目录下 `<name>/`，且不能位于模板仓库内部。脚本会替换全部
 项目标识、重置 VERSION/CHANGELOG、生成 .env、初始化 git 仓库，并自动安装前后端
@@ -44,7 +50,7 @@ target-dir 默认为当前目录下 `<name>/`，且不能位于模板仓库内�
 3. 运行验证（依赖已自动安装；若被跳过或失败，先按新项目 README「本地开发」补装）：
 
    ```bash
-   (cd backend && .venv/bin/pytest -q)
+   (cd backend && .venv/bin/pytest -q)   # Windows: cd backend; .venv\Scripts\pytest -q
    corepack pnpm --dir frontend check
    ```
 

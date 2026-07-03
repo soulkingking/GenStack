@@ -30,26 +30,27 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 <!-- template-only:start -->
 ## 用模板创建新项目
 
-本地已有模板仓库时：
+推荐方式（macOS/Linux/Windows 通用，[packages/create-genstack](packages/create-genstack) 发布到 npm 后可用）：
 
 ```bash
-bash scripts/create-project.sh my-app ~/工作/项目/my-app
+npm create genstack@latest -- my-app
 ```
 
-本地没有模板时，远程一行命令（脚本自举：先克隆模板再执行）：
+macOS/Linux 也可用远程一行命令（脚本自举：先克隆模板再执行）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/soulkingking/GenStack/main/scripts/create-project.sh \
   | bash -s -- my-app
 ```
 
-或使用 npm（[packages/create-genstack](packages/create-genstack) 发布到 npm 后可用）：
+本地已有模板仓库时：
 
 ```bash
-npm create genstack@latest -- my-app
+bash scripts/create-project.sh my-app ~/工作/项目/my-app          # macOS/Linux
+node packages/create-genstack/bin/create-genstack.mjs --template . my-app  # 全平台
 ```
 
-三种方式最终都由 `scripts/create-project.sh` 完成：复制模板中受版本管理的文件
+所有方式最终都由 `packages/create-genstack`（纯 Node，跨平台）完成：复制模板中受版本管理的文件
 （自动跳过 `.git`、依赖与构建产物），把 `GenStack`/`genstack` 全部替换为新项目名
 （`my-app` → 显示名 `MyApp`，同时用作 Docker 镜像名、Compose 项目名、pnpm scope
 和 Nacos 服务名），重置 VERSION 与 CHANGELOG，从 `.env.example` 生成 `.env`，
@@ -67,38 +68,39 @@ npm create genstack@latest -- my-app
 - Python 3.11（推荐配合 [uv](https://docs.astral.sh/uv/) 创建虚拟环境）
 - Node.js ≥ 22（自带 corepack，用于按 `packageManager` 版本运行 pnpm，无需全局安装 pnpm）
 - Docker（可选，仅打包镜像时需要）
-- Windows：请在 [WSL](https://learn.microsoft.com/windows/wsl/) 中开发——脚本、
-  虚拟环境路径（`.venv/bin`）与 VS Code 调试任务均基于 bash/unix 约定，
-  不支持 PowerShell/CMD 原生运行
+- Windows 原生支持（PowerShell/CMD）：开发脚本均为 Node 实现；另需
+  [Git for Windows](https://git-scm.com/download/win)。唯一差异是虚拟环境
+  路径为 `backend\.venv\Scripts\`（unix 为 `backend/.venv/bin/`）
 
 ### 安装依赖
 
 ```bash
 # 运行时配置
-cp .env.example .env
+cp .env.example .env    # Windows PowerShell: Copy-Item .env.example .env
 
 # 后端依赖：创建虚拟环境并安装 Python 包
 uv venv --python 3.11 --seed backend/.venv
 backend/.venv/bin/pip install -r backend/requirements-dev.txt
+# Windows: backend\.venv\Scripts\pip install -r backend/requirements-dev.txt
 
 # 前端依赖：按 pnpm-lock.yaml 锁定版本安装 node 包
-bash scripts/init-frontend.sh
+node scripts/init-frontend.mjs
 # 等价于: corepack pnpm --dir frontend install --frozen-lockfile
 ```
 
 未安装 `uv` 时，可用系统 Python 3.11 创建虚拟环境：
 
 ```bash
-python3.11 -m venv backend/.venv
+python3.11 -m venv backend/.venv    # Windows: py -3.11 -m venv backend/.venv
 ```
 
 ### 启动
 
-分别启动两个进程：
+分别启动两个进程（全平台一致）：
 
 ```bash
-bash scripts/start-backend.sh
-bash scripts/start-frontend.sh
+node scripts/start-backend.mjs
+node scripts/start-frontend.mjs
 ```
 
 访问 <http://127.0.0.1:5173>。后端固定使用
@@ -107,20 +109,20 @@ bash scripts/start-frontend.sh
 ## 验证
 
 ```bash
-(cd backend && .venv/bin/pytest -q)
+(cd backend && .venv/bin/pytest -q)    # Windows: cd backend; .venv\Scripts\pytest -q
 corepack pnpm --dir frontend check
 docker compose config --quiet
 ```
 
 推送到 `main` 或提交 PR 时，GitHub Actions（[.github/workflows/ci.yml](.github/workflows/ci.yml)）
-自动执行同样的后端测试、前端检查和 Compose 配置校验。
+在 Linux 与 Windows 上自动执行同样的后端测试和前端检查（Compose 校验仅 Linux）。
 
 ## Docker
 
 默认使用 DaoCloud 基础镜像、npmmirror、阿里云 PyPI 和清华 Debian 源：
 
 ```bash
-bash scripts/package.sh
+node scripts/package.mjs
 docker compose up -d
 ```
 
@@ -136,7 +138,7 @@ NPM_REGISTRY=https://registry.npmjs.org \
 PIP_INDEX_URL=https://pypi.org/simple \
 DEBIAN_MIRROR=deb.debian.org \
 TZ=UTC \
-bash scripts/package.sh
+node scripts/package.mjs
 ```
 
 所有变量都只影响本次构建，不会写入仓库配置。

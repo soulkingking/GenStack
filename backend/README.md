@@ -9,4 +9,5 @@
 
 ```bash
 PYTHONPATH=backend backend/.venv/bin/pytest backend/tests -q
+# Windows PowerShell: cd backend; .venv\Scripts\pytest -q
 ```

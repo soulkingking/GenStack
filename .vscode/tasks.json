@@ -9,6 +9,14 @@
         "-lc",
         "pids=$(lsof -tiTCP:8000 -sTCP:LISTEN || true); if [ -n \"$pids\" ]; then kill -9 $pids; echo \"Stopped port 8000 listeners: $pids\"; else echo \"Port 8000 is free\"; fi"
       ],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "$p = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($p) { Stop-Process -Id $p -Force; Write-Output \"Stopped port 8000 listeners: $p\" } else { Write-Output \"Port 8000 is free\" }"
+        ]
+      },
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -24,6 +32,14 @@
         "-lc",
         "pids=$(lsof -tiTCP:5173 -sTCP:LISTEN || true); if [ -n \"$pids\" ]; then kill -9 $pids; echo \"Stopped port 5173 listeners: $pids\"; else echo \"Port 5173 is free\"; fi"
       ],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "$p = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($p) { Stop-Process -Id $p -Force; Write-Output \"Stopped port 5173 listeners: $p\" } else { Write-Output \"Port 5173 is free\" }"
+        ]
+      },
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

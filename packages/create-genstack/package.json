@@ -1,13 +1,14 @@
 {
   "name": "create-genstack",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Create a new project from the GenStack template (React 19 + FastAPI monorepo)",
   "type": "module",
   "bin": {
     "create-genstack": "bin/create-genstack.mjs"
   },
   "files": [
-    "bin"
+    "bin",
+    "lib"
   ],
   "engines": {
     "node": ">=18"

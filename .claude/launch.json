@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "backend",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": ["scripts/start-backend.sh"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/start-backend.mjs"],
       "port": 8000
     },
     {
       "name": "frontend",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": ["scripts/start-frontend.sh"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/start-frontend.mjs"],
       "port": 5173
     }
   ]

@@ -1,4 +1,6 @@
 {
+  // Windows 下 venv 布局不同，首次调试前请手动选择解释器:
+  // backend\.venv\Scripts\python.exe（Ctrl+Shift+P -> Python: Select Interpreter）
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
   "python.analysis.extraPaths": ["${workspaceFolder}/backend"],
   "python.testing.pytestEnabled": true,

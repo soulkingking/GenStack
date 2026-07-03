@@ -74,12 +74,12 @@ function cloneTemplate(repo, ref, cloneDir) {
 
 function printNextSteps(target, installed, skipped) {
   if (skipped) {
-    process.stdout.write("完成（已跳过依赖安装）。手动安装（需 Python 3.11 与 Node.js >= 22）:\n");
+    process.stdout.write("完成（已跳过依赖安装）。手动安装（需 Python >= 3.11 与 Node.js >= 22）:\n");
     process.stdout.write(`${manualInstallSteps(target)}\n`);
   } else if (installed) {
     process.stdout.write("完成，前后端依赖已安装。\n");
   } else {
-    process.stderr.write("完成，但依赖安装未成功，请手动执行（需 Python 3.11 与 Node.js >= 22）:\n");
+    process.stderr.write("完成，但依赖安装未成功，请手动执行（需 Python >= 3.11 与 Node.js >= 22）:\n");
     process.stdout.write(`${manualInstallSteps(target)}\n`);
   }
   process.stdout.write(`

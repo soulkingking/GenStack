@@ -57,7 +57,7 @@ node packages/create-genstack/bin/create-genstack.mjs --template . my-app  # 全
 初始化全新的 git 仓库，并自动安装前后端依赖（`--skip-install` 可跳过；工具缺失时
 回退为打印「本地开发」手动步骤）。依赖安装默认使用阿里云 PyPI 与 npmmirror（与
 Dockerfile 一致），可用环境变量 `PIP_INDEX_URL`、`NPM_REGISTRY` 覆盖为官方源；
-后端严格要求 Python 3.11（安装 [uv](https://docs.astral.sh/uv/) 可自动下载）。
+后端要求 Python >= 3.11（安装 [uv](https://docs.astral.sh/uv/) 可自动下载）。
 完成后即可直接启动或在 VS Code 中 F5 调试，
 注意检查 README 描述与 `.env` 中的 Nacos、认证配置。模板仓库地址与分支可用环境变量
 `GENSTACK_REPO`、`GENSTACK_REF` 或 CLI 的 `--repo`、`--ref` 覆盖。脚手架自身
@@ -68,7 +68,7 @@ Dockerfile 一致），可用环境变量 `PIP_INDEX_URL`、`NPM_REGISTRY` 覆�
 
 ### 环境要求
 
-- Python 3.11（推荐配合 [uv](https://docs.astral.sh/uv/) 创建虚拟环境）
+- Python ≥ 3.11（生产镜像固定 3.11；推荐配合 [uv](https://docs.astral.sh/uv/) 创建虚拟环境）
 - Node.js ≥ 22（自带 corepack，用于按 `packageManager` 版本运行 pnpm，无需全局安装 pnpm）
 - Docker（可选，仅打包镜像时需要）
 - Windows 原生支持（PowerShell/CMD）：开发脚本均为 Node 实现；另需
@@ -91,10 +91,10 @@ node scripts/init-frontend.mjs
 # 等价于: corepack pnpm --dir frontend install --frozen-lockfile
 ```
 
-未安装 `uv` 时，可用系统 Python 3.11 创建虚拟环境：
+未安装 `uv` 时，可用系统 Python（>= 3.11）创建虚拟环境：
 
 ```bash
-python3.11 -m venv backend/.venv    # Windows: py -3.11 -m venv backend/.venv
+python3 -m venv backend/.venv    # Windows: py -m venv backend\.venv（需 >= 3.11）
 ```
 
 ### 启动

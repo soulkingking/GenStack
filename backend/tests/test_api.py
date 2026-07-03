@@ -21,7 +21,7 @@ def test_health_reports_ok() -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_meta_uses_genstack_identity() -> None:
+def test_meta_uses_app_identity() -> None:
     # 与后端相同的规则读取根目录 VERSION，避免版本升级时测试跟着改。
     expected_version = (
         (_REPOSITORY_ROOT / "VERSION").read_text(encoding="utf-8").strip().splitlines()[0].strip()

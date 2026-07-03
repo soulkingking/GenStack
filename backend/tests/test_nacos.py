@@ -130,6 +130,8 @@ def test_deregister_removes_instance_and_closes_client(fake_sdk: types.ModuleTyp
 
 
 def test_lifespan_skips_registration_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    disabled_settings = main_module.settings.model_copy(update={"nacos_enabled": False})
+    monkeypatch.setattr(main_module, "settings", disabled_settings)
     calls: list[Settings] = []
 
     async def fake_register(settings: Settings):

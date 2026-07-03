@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Route, Routes } from "react-router";
 
 import { HomePage } from "@/pages/home-page";
@@ -18,6 +19,8 @@ export function App() {
           <Route path="*" element={<HomePage />} />
         </Routes>
       </BrowserRouter>
+      {/* 仅开发构建包含调试面板，生产构建经死代码消除后不含任何字节。 */}
+      {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
     </QueryClientProvider>
   );
 }

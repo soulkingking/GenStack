@@ -10,10 +10,12 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 - `GET /api/meta`：应用名称和版本
 - React 状态首页
 - Vite 开发代理
-- FastAPI 同源静态资源托管
+- FastAPI 同源静态资源托管（支持前端路由深链接回退到 index.html）
+- 可选 Nacos 服务注册：`NACOS_ENABLED=true` 时启动注册实例、关闭时注销
 - Docker Compose 单容器交付
 
-当前不包含认证、用户管理、API Key、ORM、数据库迁移或 Nacos。
+当前不包含登录接口、用户管理、API Key、ORM 或数据库迁移。认证账号
+（`AUTH_USERNAME`/`AUTH_PASSWORD`）与 `DATABASE_URL` 一样属于预留配置。
 
 ## 技术栈
 
@@ -22,6 +24,7 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 | 后端 | Python 3.11、FastAPI、pydantic-settings |
 | 前端 | React 19、Vite 8、TypeScript 6、pnpm、Tailwind CSS、shadcn/ui、TanStack Query |
 | 数据 | 预留 `DATABASE_URL`，默认持久化目录为 `data/` |
+| 服务发现 | 可选 Nacos（nacos-sdk-python，默认关闭） |
 | 交付 | 多阶段 Dockerfile、Docker Compose |
 
 ## 本地开发
@@ -56,6 +59,9 @@ bash scripts/start-frontend.sh
 corepack pnpm --dir frontend check
 docker compose config --quiet
 ```
+
+推送到 `main` 或提交 PR 时，GitHub Actions（[.github/workflows/ci.yml](.github/workflows/ci.yml)）
+自动执行同样的后端测试、前端检查和 Compose 配置校验。
 
 ## Docker
 

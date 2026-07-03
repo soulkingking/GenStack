@@ -3,6 +3,7 @@ import { Activity, RotateCw } from "lucide-react";
 
 import { getHealth, getMeta } from "@/api/system";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -15,6 +16,8 @@ export function HomePage() {
   const health = useQuery({ queryKey: ["system", "health"], queryFn: getHealth });
   const meta = useQuery({ queryKey: ["system", "meta"], queryFn: getMeta });
   const isAvailable = health.data?.status === "ok" && meta.isSuccess;
+  // 首次加载与手动刷新共用同一进行中状态，期间禁用按钮防止重复触发。
+  const isChecking = health.isFetching || meta.isFetching;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-12">
@@ -39,9 +42,13 @@ export function HomePage() {
           </CardHeader>
           <CardContent className="flex items-center justify-between gap-4">
             <div>
+              {/* role="status" 隐含 aria-live=polite，状态变化时读屏器自动播报。 */}
               <p
+                role="status"
                 className={
-                  isAvailable ? "font-medium text-emerald-700" : "font-medium text-amber-700"
+                  isAvailable
+                    ? "font-medium text-emerald-700 dark:text-emerald-400"
+                    : "font-medium text-amber-700 dark:text-amber-400"
                 }
               >
                 {health.isPending || meta.isPending
@@ -56,12 +63,16 @@ export function HomePage() {
             </div>
             <Button
               variant="outline"
+              disabled={isChecking}
               onClick={() => {
                 // 两个接口互不依赖，并行刷新可避免串行等待，同时不阻塞点击事件。
                 void Promise.all([health.refetch(), meta.refetch()]);
               }}
             >
-              <RotateCw className="mr-2 size-4" aria-hidden="true" />
+              <RotateCw
+                className={cn("mr-2 size-4", isChecking && "animate-spin")}
+                aria-hidden="true"
+              />
               重新检查
             </Button>
           </CardContent>

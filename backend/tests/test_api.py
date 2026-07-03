@@ -1,8 +1,11 @@
 import asyncio
+from pathlib import Path
 
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 async def _get(path: str):
@@ -19,7 +22,12 @@ def test_health_reports_ok() -> None:
 
 
 def test_meta_uses_genstack_identity() -> None:
+    # 与后端相同的规则读取根目录 VERSION，避免版本升级时测试跟着改。
+    expected_version = (
+        (_REPOSITORY_ROOT / "VERSION").read_text(encoding="utf-8").strip().splitlines()[0].strip()
+    )
+
     response = asyncio.run(_get("/api/meta"))
 
     assert response.status_code == 200
-    assert response.json() == {"name": "GenStack", "version": "0.1.0"}
+    assert response.json() == {"name": "GenStack", "version": expected_version}

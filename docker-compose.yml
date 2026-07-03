@@ -11,6 +11,10 @@ services:
     environment:
       APP_DEBUG: "false"
       CORS_ORIGINS: "http://localhost:8000"
+      # 接入 Nacos 时取消注释并填入实际地址。
+      # NACOS_ENABLED: "true"
+      # NACOS_SERVER_ADDR: "nacos:8848"
+      # NACOS_SERVICE_NAME: "genstack"
     volumes:
       - ./data:/app/data
     # 使用 Python 标准库探活，避免为健康检查额外安装 curl。

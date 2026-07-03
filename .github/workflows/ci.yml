@@ -50,6 +50,10 @@ jobs:
           git config --global user.name ci
           git config --global user.email ci@example.com
       - name: Create project from local template
+        # runner 在国外，覆盖默认的国内镜像源
+        env:
+          PIP_INDEX_URL: https://pypi.org/simple/
+          NPM_REGISTRY: https://registry.npmjs.org
         run: node packages/create-genstack/bin/create-genstack.mjs --template . ci-app ${{ runner.temp }}/ci-app
       - name: Run generated project backend tests (unix)
         if: runner.os != 'Windows'

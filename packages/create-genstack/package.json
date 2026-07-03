@@ -1,6 +1,6 @@
 {
   "name": "create-genstack",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Create a new project from the GenStack template (React 19 + FastAPI monorepo)",
   "type": "module",
   "bin": {

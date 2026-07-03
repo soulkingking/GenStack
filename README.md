@@ -55,7 +55,10 @@ node packages/create-genstack/bin/create-genstack.mjs --template . my-app  # 全
 （`my-app` → 显示名 `MyApp`，同时用作 Docker 镜像名、Compose 项目名、pnpm scope
 和 Nacos 服务名），重置 VERSION 与 CHANGELOG，从 `.env.example` 生成 `.env`，
 初始化全新的 git 仓库，并自动安装前后端依赖（`--skip-install` 可跳过；工具缺失时
-回退为打印「本地开发」手动步骤）。完成后即可直接启动或在 VS Code 中 F5 调试，
+回退为打印「本地开发」手动步骤）。依赖安装默认使用阿里云 PyPI 与 npmmirror（与
+Dockerfile 一致），可用环境变量 `PIP_INDEX_URL`、`NPM_REGISTRY` 覆盖为官方源；
+后端严格要求 Python 3.11（安装 [uv](https://docs.astral.sh/uv/) 可自动下载）。
+完成后即可直接启动或在 VS Code 中 F5 调试，
 注意检查 README 描述与 `.env` 中的 Nacos、认证配置。模板仓库地址与分支可用环境变量
 `GENSTACK_REPO`、`GENSTACK_REF` 或 CLI 的 `--repo`、`--ref` 覆盖。脚手架自身
 （本节说明、`scripts/create-project.sh`、`packages/`、genstack skill）不会带入新项目。

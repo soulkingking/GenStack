@@ -9,13 +9,13 @@ describe("authentication API", () => {
 
   it("loads the browser session without exposing token details", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ authenticated: true }), {
+      new Response(JSON.stringify({ enabled: true, authenticated: true }), {
         headers: { "Content-Type": "application/json" },
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getSession()).resolves.toEqual({ authenticated: true });
+    await expect(getSession()).resolves.toEqual({ enabled: true, authenticated: true });
     expect(fetchMock).toHaveBeenCalledWith("/api/auth/session", {
       credentials: "same-origin",
       headers: { Accept: "application/json" },
@@ -24,13 +24,14 @@ describe("authentication API", () => {
 
   it("exchanges callback parameters through the same-origin backend", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ authenticated: true }), {
+      new Response(JSON.stringify({ enabled: true, authenticated: true }), {
         headers: { "Content-Type": "application/json" },
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(exchangeAuthorizationCode("code", "state")).resolves.toEqual({
+      enabled: true,
       authenticated: true,
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/auth/token", {
@@ -57,6 +58,16 @@ describe("authentication API", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(
         new Response(JSON.stringify({ access_token: "must-not-be-used" })),
+      ),
+    );
+
+    await expect(getSession()).rejects.toThrow("Invalid authentication response");
+
+    // 缺少 enabled 字段的旧契约响应同样拒绝，避免前端误判开关状态。
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        new Response(JSON.stringify({ authenticated: true })),
       ),
     );
 

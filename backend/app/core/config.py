@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     database_url: str = _DEFAULT_SQLITE_URL
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # 第三方登录总开关：默认关闭，关闭时页面匿名访问、登录相关接口不可用。
+    auth_enabled: bool = False
+
     # OAuth2 客户端密钥只在后端使用；SecretStr 避免配置对象日志意外输出明文。
     oauth2_authorize_url: str = ""
     oauth2_token_url: str = ""

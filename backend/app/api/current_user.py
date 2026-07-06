@@ -4,7 +4,11 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 
-from app.api.auth import clear_session_cookie, require_session_token
+from app.api.auth import (
+    clear_session_cookie,
+    ensure_authentication_enabled,
+    require_session_token,
+)
 from app.clients.base import RemoteAuthenticationError, RemoteClientError
 from app.clients.user import CurrentUser, UserClient
 from app.core.config import Settings, get_settings
@@ -16,6 +20,15 @@ def get_current_user_settings() -> Settings:
     """返回当前用户接口配置，并保留测试替换边界。"""
 
     return get_settings()
+
+
+def require_enabled_authentication(
+    settings: Settings = Depends(get_current_user_settings),
+) -> Settings:
+    """返回运行时配置，并在第三方登录关闭时隐藏当前用户接口。"""
+
+    ensure_authentication_enabled(settings)
+    return settings
 
 
 async def get_remote_http_client() -> AsyncIterator[httpx.AsyncClient]:
@@ -36,8 +49,9 @@ def get_user_client(
 
 @router.get("/current-user", response_model=CurrentUser)
 async def read_current_user(
+    # 开关守卫必须先于会话校验，保证关闭时统一返回 404 而不是 401。
+    settings: Settings = Depends(require_enabled_authentication),
     access_token: str = Depends(require_session_token),
-    settings: Settings = Depends(get_current_user_settings),
     user_client: UserClient = Depends(get_user_client),
 ) -> CurrentUser | JSONResponse:
     """使用 HttpOnly Cookie 中的 Token 获取经过白名单过滤的当前用户。"""

@@ -1,8 +1,10 @@
 import asyncio
+import logging
 from collections.abc import Callable
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
+import pytest
 from fastapi import FastAPI
 
 from app.api import auth
@@ -10,6 +12,7 @@ from app.core.config import Settings
 
 _SETTINGS = Settings(
     _env_file=None,
+    auth_enabled=True,
     oauth2_authorize_url="https://auth.example/oauth2/authorize",
     oauth2_token_url="https://auth.example/oauth2/token",
     oauth2_client_id="genstack-client",
@@ -17,6 +20,9 @@ _SETTINGS = Settings(
     oauth2_redirect_uri="http://127.0.0.1:5173/",
     oauth2_scope="all",
 )
+
+# 开关关闭但 OAuth 配置完整：验证 404 来自开关本身而不是缺失配置。
+_DISABLED_SETTINGS = _SETTINGS.model_copy(update={"auth_enabled": False})
 
 
 async def _request(
@@ -71,7 +77,11 @@ def test_login_redirects_with_state_and_fixed_oauth_parameters() -> None:
 
 def test_login_rejects_incomplete_server_configuration() -> None:
     response = asyncio.run(
-        _request("GET", "/api/auth/login", settings=Settings(_env_file=None))
+        _request(
+            "GET",
+            "/api/auth/login",
+            settings=Settings(_env_file=None, auth_enabled=True),
+        )
     )
 
     assert response.status_code == 503
@@ -88,9 +98,42 @@ def test_session_only_reports_cookie_presence() -> None:
     )
     anonymous = asyncio.run(_request("GET", "/api/auth/session"))
 
-    assert authenticated.json() == {"authenticated": True}
+    assert authenticated.json() == {"enabled": True, "authenticated": True}
     assert "private-token" not in authenticated.text
-    assert anonymous.json() == {"authenticated": False}
+    assert anonymous.json() == {"enabled": True, "authenticated": False}
+
+
+def test_session_reports_disabled_login_and_ignores_stale_cookie() -> None:
+    response = asyncio.run(
+        _request(
+            "GET",
+            "/api/auth/session",
+            settings=_DISABLED_SETTINGS,
+            cookies={"genstack_session": "stale-token"},
+        )
+    )
+
+    assert response.json() == {"enabled": False, "authenticated": False}
+
+
+def test_login_and_token_are_hidden_when_authentication_disabled() -> None:
+    login = asyncio.run(
+        _request("GET", "/api/auth/login", settings=_DISABLED_SETTINGS)
+    )
+    token = asyncio.run(
+        _request(
+            "POST",
+            "/api/auth/token",
+            settings=_DISABLED_SETTINGS,
+            json={"code": "one-time-code", "state": "expected-state"},
+            cookies={"oauth_state": "expected-state"},
+        )
+    )
+
+    assert login.status_code == 404
+    assert login.json() == {"detail": "第三方登录未启用"}
+    assert token.status_code == 404
+    assert token.json() == {"detail": "第三方登录未启用"}
 
 
 def test_token_exchange_rejects_mismatched_state_before_calling_provider() -> None:
@@ -145,7 +188,7 @@ def test_token_exchange_uses_server_secret_and_sets_http_only_cookie() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json() == {"authenticated": True}
+    assert response.json() == {"enabled": True, "authenticated": True}
     assert "provider-access-token" not in response.text
     assert response.cookies["genstack_session"] == "provider-access-token"
 
@@ -188,6 +231,37 @@ def test_token_exchange_uses_default_lifetime_for_invalid_expires_in() -> None:
         if value.startswith("genstack_session=")
     )
     assert "Max-Age=3600" in session_cookie
+
+
+def test_token_exchange_logs_upstream_status_without_leaking_credentials(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "code": 200,
+                "success": True,
+                "result": {"access_token": "provider-access-token", "expires_in": 7200},
+            },
+        )
+
+    with caplog.at_level(logging.DEBUG, logger="app.api.auth"):
+        response = asyncio.run(
+            _request(
+                "POST",
+                "/api/auth/token",
+                json={"code": "one-time-code", "state": "expected-state"},
+                cookies={"oauth_state": "expected-state"},
+                upstream_handler=handler,
+            )
+        )
+
+    assert response.status_code == 200
+    assert "POST https://auth.example/oauth2/token -> 200" in caplog.text
+    # DEBUG 正文预览已掩码；client_secret 与 access_token 任何级别都不落日志。
+    assert "provider-access-token" not in caplog.text
+    assert "server-secret" not in caplog.text
 
 
 def test_token_exchange_rejects_provider_business_failure_without_leaking_body() -> None:

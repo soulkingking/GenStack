@@ -1,5 +1,6 @@
 import logging
 import secrets
+import time
 from collections.abc import AsyncIterator
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -9,6 +10,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, field_validator
 
 from app.core.config import Settings, get_settings
+from app.core.logging import masked_response_preview
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ class TokenExchangeRequest(BaseModel):
 class SessionStatus(BaseModel):
     """不暴露 Token 的浏览器会话状态。"""
 
+    enabled: bool
     authenticated: bool
 
 
@@ -46,6 +49,25 @@ def get_auth_settings() -> Settings:
     """返回认证路由使用的运行时配置，并保留测试替换边界。"""
 
     return get_settings()
+
+
+def ensure_authentication_enabled(settings: Settings) -> None:
+    """在第三方登录开关关闭时拒绝访问登录相关接口。"""
+
+    if not settings.auth_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="第三方登录未启用",
+        )
+
+
+def require_enabled_authentication(
+    settings: Settings = Depends(get_auth_settings),
+) -> Settings:
+    """返回运行时配置，并保证第三方登录开关已开启。"""
+
+    ensure_authentication_enabled(settings)
+    return settings
 
 
 def require_session_token(
@@ -119,15 +141,22 @@ def _session_ttl(expires_in: object, settings: Settings) -> int:
 @router.get("/session", response_model=SessionStatus)
 def session_status(
     session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    settings: Settings = Depends(get_auth_settings),
 ) -> SessionStatus:
-    """返回当前浏览器是否持有未过期的登录 Cookie。"""
+    """返回第三方登录开关状态，以及浏览器是否持有未过期的登录 Cookie。"""
 
-    return SessionStatus(authenticated=bool(session_token and session_token.strip()))
+    # 开关关闭时会话一律视为匿名，避免残留 Cookie 让前端误入登录流程。
+    return SessionStatus(
+        enabled=settings.auth_enabled,
+        authenticated=bool(
+            settings.auth_enabled and session_token and session_token.strip()
+        ),
+    )
 
 
 @router.get("/login")
 def login(
-    settings: Settings = Depends(get_auth_settings),
+    settings: Settings = Depends(require_enabled_authentication),
 ) -> RedirectResponse:
     """建立短期 state Cookie，并跳转到第三方 OAuth2 授权页面。"""
 
@@ -154,7 +183,7 @@ async def exchange_token(
     payload: TokenExchangeRequest,
     response: Response,
     state_cookie: str | None = Cookie(default=None, alias=STATE_COOKIE_NAME),
-    settings: Settings = Depends(get_auth_settings),
+    settings: Settings = Depends(require_enabled_authentication),
     client: httpx.AsyncClient = Depends(get_oauth_client),
 ) -> SessionStatus:
     """校验回调状态、在服务端兑换 Token，并建立 HttpOnly Cookie 会话。"""
@@ -175,6 +204,9 @@ async def exchange_token(
         # 远程服务会与签发 code 时的 redirect_uri 做严格一致性校验。
         "redirect_uri": settings.oauth2_redirect_uri,
     }
+    # 只记录地址与状态；表单含 client_secret，任何级别都不得进入日志。
+    logger.info("第三方认证服务 Token 请求: POST %s", settings.oauth2_token_url)
+    started = time.perf_counter()
     try:
         upstream = await client.post(
             settings.oauth2_token_url,
@@ -187,6 +219,15 @@ async def exchange_token(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="第三方认证服务暂时不可用",
         ) from exc
+
+    logger.info(
+        "第三方认证服务 Token 响应: POST %s -> %s (%.0f ms)",
+        settings.oauth2_token_url,
+        upstream.status_code,
+        (time.perf_counter() - started) * 1000,
+    )
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("第三方认证服务 Token 响应正文: %s", masked_response_preview(upstream))
 
     if not upstream.is_success:
         logger.warning(
@@ -238,4 +279,4 @@ async def exchange_token(
         httponly=True,
         samesite="lax",
     )
-    return SessionStatus(authenticated=True)
+    return SessionStatus(enabled=True, authenticated=True)

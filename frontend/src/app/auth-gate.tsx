@@ -5,12 +5,19 @@ import {
   getSession,
   LOGIN_URL,
 } from "@/api/auth";
+import { AuthStateContext } from "@/app/auth-state";
 import { Button } from "@/components/ui/button";
 
 const OAUTH_RETRY_KEY = "genstack_oauth_retry";
 const CALLBACK_PARAMETERS = ["code", "state", "error", "error_description"];
 
-type AuthPhase = "checking" | "exchanging" | "redirecting" | "authenticated" | "error";
+type AuthPhase =
+  | "checking"
+  | "exchanging"
+  | "redirecting"
+  | "authenticated"
+  | "disabled"
+  | "error";
 
 interface AuthGateProps {
   children: ReactNode;
@@ -61,6 +68,12 @@ export function AuthGate({
         const session = await getSession();
         if (cancelled) return;
 
+        // 后端关闭第三方登录时跳过整个授权流程，页面匿名访问。
+        if (!session.enabled) {
+          setPhase("disabled");
+          return;
+        }
+
         if (session.authenticated) {
           window.sessionStorage.removeItem(OAUTH_RETRY_KEY);
           setPhase("authenticated");
@@ -104,8 +117,12 @@ export function AuthGate({
     };
   }, [redirect, replaceUrl]);
 
-  if (phase === "authenticated") {
-    return children;
+  if (phase === "authenticated" || phase === "disabled") {
+    return (
+      <AuthStateContext.Provider value={{ enabled: phase === "authenticated" }}>
+        {children}
+      </AuthStateContext.Provider>
+    );
   }
 
   if (phase === "error") {

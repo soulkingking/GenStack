@@ -10,6 +10,7 @@ from app.core.config import Settings
 
 _SETTINGS = Settings(
     _env_file=None,
+    auth_enabled=True,
     oauth2_userinfo_url="https://auth.example/oauth2/userinfo",
 )
 
@@ -117,7 +118,7 @@ def test_current_user_requires_userinfo_configuration() -> None:
     response = asyncio.run(
         _request(
             user_client=user_client,
-            settings=Settings(_env_file=None),
+            settings=Settings(_env_file=None, auth_enabled=True),
             cookies={"genstack_session": "private-token"},
         )
     )
@@ -127,10 +128,27 @@ def test_current_user_requires_userinfo_configuration() -> None:
     assert user_client.calls == []
 
 
+def test_current_user_is_hidden_when_authentication_disabled() -> None:
+    user_client = FakeUserClient()
+
+    response = asyncio.run(
+        _request(
+            user_client=user_client,
+            settings=_SETTINGS.model_copy(update={"auth_enabled": False}),
+            cookies={"genstack_session": "private-token"},
+        )
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "第三方登录未启用"}
+    assert user_client.calls == []
+
+
 def test_current_user_clears_cookie_when_remote_session_is_rejected() -> None:
     user_client = FakeUserClient(error=RemoteAuthenticationError("private-token"))
     settings = Settings(
         _env_file=None,
+        auth_enabled=True,
         oauth2_userinfo_url="https://auth.example/oauth2/userinfo",
         auth_cookie_secure=True,
     )

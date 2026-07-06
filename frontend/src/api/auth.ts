@@ -1,4 +1,6 @@
 export interface SessionStatus {
+  /** 后端是否开启第三方登录；关闭时页面匿名访问。 */
+  enabled: boolean;
   authenticated: boolean;
 }
 
@@ -8,6 +10,8 @@ function isSessionStatus(value: unknown): value is SessionStatus {
   return (
     typeof value === "object" &&
     value !== null &&
+    "enabled" in value &&
+    typeof value.enabled === "boolean" &&
     "authenticated" in value &&
     typeof value.authenticated === "boolean"
   );

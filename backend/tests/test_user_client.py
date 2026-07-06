@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Callable
 
 import httpx
@@ -108,6 +109,29 @@ def test_user_client_classifies_remote_http_failure() -> None:
 
     with pytest.raises(RemoteServiceError):
         asyncio.run(_get_current_user(handler))
+
+
+def test_user_client_logs_request_metadata_and_masks_debug_body(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "code": 200,
+                "success": True,
+                "result": {"username": "admin", "token": "remote-session-token"},
+            },
+        )
+
+    with caplog.at_level(logging.DEBUG, logger="app.clients.base"):
+        asyncio.run(_get_current_user(handler))
+
+    assert f"GET {_USERINFO_URL} -> 200" in caplog.text
+    assert '"username": "admin"' in caplog.text
+    # 请求头 Bearer Token 与远程返回的 token 字段都不允许出现在日志里。
+    assert "private-token" not in caplog.text
+    assert "remote-session-token" not in caplog.text
 
 
 def test_user_client_classifies_transport_failure_without_logging_token(

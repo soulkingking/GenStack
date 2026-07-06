@@ -10,8 +10,10 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 - `GET /api/meta`：应用名称和版本
 - React 状态首页
 - 第三方 OAuth2 授权码登录（FastAPI 服务端换取 Token）
+- `AUTH_ENABLED` 登录总开关：默认关闭，关闭时页面匿名访问、登录相关接口返回 404
 - HttpOnly Cookie 登录会话与 OAuth2 `state` 校验
 - `GET /api/current-user`：由后端查询并过滤当前用户信息
+- 首页当前用户卡片：登录开启时展示姓名、账号、部门与角色
 - Vite 开发代理
 - FastAPI 同源静态资源托管（支持前端路由深链接回退到 index.html）
 - 可选 Nacos 服务注册：`NACOS_ENABLED=true` 时启动注册实例、关闭时注销
@@ -115,11 +117,13 @@ node scripts/start-frontend.mjs
 
 ### 配置第三方登录
 
-在第三方认证服务注册 OAuth2 客户端，并把回调地址设置为与 `.env` 中
-`OAUTH2_REDIRECT_URI` 完全相同的值。本地默认回调地址为
+第三方登录由 `AUTH_ENABLED` 总开关控制，默认关闭：新项目不接认证服务也能直接
+访问页面。开启前先在第三方认证服务注册 OAuth2 客户端，并把回调地址设置为与
+`.env` 中 `OAUTH2_REDIRECT_URI` 完全相同的值。本地默认回调地址为
 `http://127.0.0.1:5173/`。然后配置：
 
 ```dotenv
+AUTH_ENABLED=true
 OAUTH2_AUTHORIZE_URL=http://127.0.0.1:5555/oauth2/authorize
 OAUTH2_TOKEN_URL=http://127.0.0.1:5555/oauth2/token
 OAUTH2_USERINFO_URL=http://127.0.0.1:5555/oauth2/userinfo
@@ -137,8 +141,16 @@ AUTH_COOKIE_SECURE=false
 
 登录后请求 `GET /api/current-user` 时，FastAPI 从 HttpOnly Cookie 读取 Access Token，
 通过 `backend/app/clients/` 请求第三方用户信息接口，只向浏览器返回用户、部门、角色和
-权限白名单字段。第三方拒绝 Token 时接口清除本站 Cookie 并返回 401；网络或响应契约失败
-统一返回 502。
+权限白名单字段，首页据此展示当前用户卡片。第三方拒绝 Token 时接口清除本站 Cookie 并
+返回 401；网络或响应契约失败统一返回 502。
+
+`AUTH_ENABLED=false` 时，`/api/auth/session` 返回 `enabled=false`，前端跳过整个
+授权流程直接渲染匿名页面；`/api/auth/login`、`/api/auth/token` 与
+`/api/current-user` 均返回 404。
+
+后端对第三方的每次请求都输出 INFO 日志（方法、地址、状态码、耗时）；
+`APP_DEBUG=true` 时输出掩码后的响应正文预览，Token 与密钥任何级别都不落日志，
+详见[调试标准](docs/调试标准.md)。
 
 ## 验证
 

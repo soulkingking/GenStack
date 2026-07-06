@@ -1,7 +1,10 @@
 import logging
+import time
 from typing import Any
 
 import httpx
+
+from app.core.logging import masked_response_preview
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,8 @@ class RemoteClient:
             RemoteServiceError: 网络、HTTP 状态或业务响应不符合约定。
         """
 
+        logger.info("远程服务请求: GET %s", url)
+        started = time.perf_counter()
         try:
             response = await self._http_client.get(
                 url,
@@ -43,8 +48,18 @@ class RemoteClient:
                 timeout=REMOTE_REQUEST_TIMEOUT,
             )
         except httpx.HTTPError as exc:
-            logger.warning("远程服务请求失败: %s", type(exc).__name__)
+            logger.warning("远程服务请求失败: GET %s (%s)", url, type(exc).__name__)
             raise RemoteServiceError("远程服务暂时不可用") from exc
+
+        logger.info(
+            "远程服务响应: GET %s -> %s (%.0f ms)",
+            url,
+            response.status_code,
+            (time.perf_counter() - started) * 1000,
+        )
+        # 正文预览只在 DEBUG 级别输出，敏感字段已掩码；常规日志不含第三方正文。
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("远程服务响应正文: %s", masked_response_preview(response))
 
         if response.status_code in {
             httpx.codes.UNAUTHORIZED,
@@ -70,7 +85,7 @@ class RemoteClient:
             or body.get("success") is not True
             or not isinstance(result, dict)
         ):
-            # 不记录响应正文，防止第三方错误信息或用户对象进入应用日志。
+            # 警告不含正文，防止第三方错误信息进入常规日志；排查时开 DEBUG 看掩码预览。
             logger.warning("远程服务响应未通过业务契约校验")
             raise RemoteServiceError("远程服务响应无效")
 

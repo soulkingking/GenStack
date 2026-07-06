@@ -8,11 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, current_user, health
 from app.core import nacos
 from app.core.config import get_settings
+from app.core.logging import configure_logging
 from app.core.static import SpaStaticFiles
 from app.core.version import APP_NAME, APP_VERSION
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+configure_logging(settings.app_debug)
 
 
 @asynccontextmanager

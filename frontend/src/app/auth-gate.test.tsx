@@ -23,7 +23,7 @@ describe("AuthGate", () => {
   });
 
   it("renders protected content for an existing session", async () => {
-    vi.mocked(getSession).mockResolvedValue({ authenticated: true });
+    vi.mocked(getSession).mockResolvedValue({ enabled: true, authenticated: true });
 
     render(
       <AuthGate>
@@ -35,8 +35,23 @@ describe("AuthGate", () => {
     expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
   });
 
+  it("renders content without login when third-party auth is disabled", async () => {
+    vi.mocked(getSession).mockResolvedValue({ enabled: false, authenticated: false });
+    const redirect = vi.fn();
+
+    render(
+      <AuthGate redirect={redirect}>
+        <p>匿名内容</p>
+      </AuthGate>,
+    );
+
+    expect(await screen.findByText("匿名内容")).toBeInTheDocument();
+    expect(redirect).not.toHaveBeenCalled();
+    expect(exchangeAuthorizationCode).not.toHaveBeenCalled();
+  });
+
   it("redirects an unauthenticated request without a code", async () => {
-    vi.mocked(getSession).mockResolvedValue({ authenticated: false });
+    vi.mocked(getSession).mockResolvedValue({ enabled: true, authenticated: false });
     const redirect = vi.fn();
 
     render(
@@ -51,8 +66,11 @@ describe("AuthGate", () => {
 
   it("exchanges callback parameters, cleans the URL, and renders content", async () => {
     setLocation("/?code=callback-code&state=callback-state&keep=1#section");
-    vi.mocked(getSession).mockResolvedValue({ authenticated: false });
-    vi.mocked(exchangeAuthorizationCode).mockResolvedValue({ authenticated: true });
+    vi.mocked(getSession).mockResolvedValue({ enabled: true, authenticated: false });
+    vi.mocked(exchangeAuthorizationCode).mockResolvedValue({
+      enabled: true,
+      authenticated: true,
+    });
     const replaceUrl = vi.fn();
 
     render(
@@ -72,7 +90,7 @@ describe("AuthGate", () => {
 
   it("restarts authorization after the first exchange failure", async () => {
     setLocation("/?code=expired-code&state=callback-state");
-    vi.mocked(getSession).mockResolvedValue({ authenticated: false });
+    vi.mocked(getSession).mockResolvedValue({ enabled: true, authenticated: false });
     vi.mocked(exchangeAuthorizationCode).mockRejectedValue(new Error("exchange failed"));
     const redirect = vi.fn();
 
@@ -90,7 +108,7 @@ describe("AuthGate", () => {
   it("shows an error instead of looping after a repeated failure", async () => {
     setLocation("/?code=invalid-code&state=callback-state");
     window.sessionStorage.setItem(retryKey, "1");
-    vi.mocked(getSession).mockResolvedValue({ authenticated: false });
+    vi.mocked(getSession).mockResolvedValue({ enabled: true, authenticated: false });
     vi.mocked(exchangeAuthorizationCode).mockRejectedValue(new Error("exchange failed"));
     const redirect = vi.fn();
 

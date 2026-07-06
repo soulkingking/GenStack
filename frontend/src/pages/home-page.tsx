@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, RotateCw } from "lucide-react";
 
 import { getHealth, getMeta } from "@/api/system";
+import { useAuthState } from "@/app/auth-state";
+import { CurrentUserCard } from "@/components/current-user-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/card";
 
 export function HomePage() {
+  const auth = useAuthState();
   const health = useQuery({ queryKey: ["system", "health"], queryFn: getHealth });
   const meta = useQuery({ queryKey: ["system", "meta"], queryFn: getMeta });
   const isAvailable = health.data?.status === "ok" && meta.isSuccess;
@@ -77,6 +80,9 @@ export function HomePage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* 第三方登录关闭时页面保持匿名，不发起用户信息请求。 */}
+        {auth.enabled ? <CurrentUserCard /> : null}
       </section>
     </main>
   );

@@ -48,6 +48,31 @@ def get_auth_settings() -> Settings:
     return get_settings()
 
 
+def require_session_token(
+    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+) -> str:
+    """返回清理后的服务端会话 Token，缺失时拒绝继续访问。"""
+
+    if not session_token or not session_token.strip():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未登录",
+        )
+    return session_token.strip()
+
+
+def clear_session_cookie(response: Response, settings: Settings) -> None:
+    """使用与创建时相同的属性删除浏览器会话 Cookie。"""
+
+    response.delete_cookie(
+        SESSION_COOKIE_NAME,
+        path="/",
+        secure=settings.auth_cookie_secure,
+        httponly=True,
+        samesite="lax",
+    )
+
+
 async def get_oauth_client() -> AsyncIterator[httpx.AsyncClient]:
     """创建仅供一次请求使用的 JBM HTTP 客户端。"""
 

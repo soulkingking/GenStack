@@ -74,7 +74,7 @@ def clear_session_cookie(response: Response, settings: Settings) -> None:
 
 
 async def get_oauth_client() -> AsyncIterator[httpx.AsyncClient]:
-    """创建仅供一次请求使用的 JBM HTTP 客户端。"""
+    """创建仅供一次请求使用的第三方认证服务 HTTP 客户端。"""
 
     async with httpx.AsyncClient(timeout=_TOKEN_REQUEST_TIMEOUT_SECONDS) as client:
         yield client
@@ -106,7 +106,7 @@ def _build_authorize_url(settings: Settings, state_value: str) -> str:
 
 
 def _session_ttl(expires_in: object, settings: Settings) -> int:
-    # JBM 的 expires_in 来自运行时响应；拒绝 bool、字符串和非正数，避免异常 Cookie。
+    # expires_in 来自远程响应；拒绝 bool、字符串和非正数，避免异常 Cookie。
     if (
         isinstance(expires_in, int)
         and not isinstance(expires_in, bool)
@@ -129,7 +129,7 @@ def session_status(
 def login(
     settings: Settings = Depends(get_auth_settings),
 ) -> RedirectResponse:
-    """建立短期 state Cookie，并跳转到 JBM OAuth2 授权页面。"""
+    """建立短期 state Cookie，并跳转到第三方 OAuth2 授权页面。"""
 
     _require_oauth_configuration(settings)
     state_value = secrets.token_urlsafe(32)
@@ -166,13 +166,13 @@ async def exchange_token(
             detail="登录状态校验失败",
         )
 
-    # client_secret 是 JBM 底层的隐式必填参数，只能从服务端配置注入。
+    # client_secret 是远程服务的隐式必填参数，只能从服务端配置注入。
     form = {
         "grant_type": "authorization_code",
         "code": payload.code,
         "client_id": settings.oauth2_client_id,
         "client_secret": settings.oauth2_client_secret.get_secret_value(),
-        # JBM 会与签发 code 时的 redirect_uri 做严格一致性校验。
+        # 远程服务会与签发 code 时的 redirect_uri 做严格一致性校验。
         "redirect_uri": settings.oauth2_redirect_uri,
     }
     try:
@@ -182,14 +182,17 @@ async def exchange_token(
             timeout=_TOKEN_REQUEST_TIMEOUT_SECONDS,
         )
     except httpx.HTTPError as exc:
-        logger.warning("JBM Token 请求失败: %s", type(exc).__name__)
+        logger.warning("第三方认证服务 Token 请求失败: %s", type(exc).__name__)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="第三方认证服务暂时不可用",
         ) from exc
 
     if not upstream.is_success:
-        logger.warning("JBM Token 请求返回非成功 HTTP 状态: %s", upstream.status_code)
+        logger.warning(
+            "第三方认证服务 Token 请求返回非成功 HTTP 状态: %s",
+            upstream.status_code,
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="第三方认证服务暂时不可用",
@@ -198,7 +201,7 @@ async def exchange_token(
     try:
         body = upstream.json()
     except ValueError as exc:
-        logger.warning("JBM Token 响应不是合法 JSON")
+        logger.warning("第三方认证服务 Token 响应不是合法 JSON")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="第三方登录失败",
@@ -213,7 +216,7 @@ async def exchange_token(
         or not isinstance(access_token, str)
         or not access_token.strip()
     ):
-        logger.warning("JBM Token 响应未通过业务契约校验")
+        logger.warning("第三方认证服务 Token 响应未通过业务契约校验")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="第三方登录失败",

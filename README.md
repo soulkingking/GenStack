@@ -9,8 +9,9 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 - `GET /api/health`：API 存活检查
 - `GET /api/meta`：应用名称和版本
 - React 状态首页
-- JBM OAuth2 授权码登录（FastAPI 服务端换取 Token）
+- 第三方 OAuth2 授权码登录（FastAPI 服务端换取 Token）
 - HttpOnly Cookie 登录会话与 OAuth2 `state` 校验
+- `GET /api/current-user`：由后端查询并过滤当前用户信息
 - Vite 开发代理
 - FastAPI 同源静态资源托管（支持前端路由深链接回退到 index.html）
 - 可选 Nacos 服务注册：`NACOS_ENABLED=true` 时启动注册实例、关闭时注销
@@ -114,13 +115,14 @@ node scripts/start-frontend.mjs
 
 ### 配置第三方登录
 
-在 JBM 注册 OAuth2 客户端，并把回调地址设置为与 `.env` 中
+在第三方认证服务注册 OAuth2 客户端，并把回调地址设置为与 `.env` 中
 `OAUTH2_REDIRECT_URI` 完全相同的值。本地默认回调地址为
 `http://127.0.0.1:5173/`。然后配置：
 
 ```dotenv
 OAUTH2_AUTHORIZE_URL=http://127.0.0.1:5555/oauth2/authorize
 OAUTH2_TOKEN_URL=http://127.0.0.1:5555/oauth2/token
+OAUTH2_USERINFO_URL=http://127.0.0.1:5555/oauth2/userinfo
 OAUTH2_CLIENT_ID=your-client-id
 OAUTH2_CLIENT_SECRET=your-client-secret
 OAUTH2_REDIRECT_URI=http://127.0.0.1:5173/
@@ -128,10 +130,15 @@ OAUTH2_SCOPE=all
 AUTH_COOKIE_SECURE=false
 ```
 
-浏览器访问系统后先检查本站会话；未登录时由 `/api/auth/login` 跳转 JBM。JBM
+浏览器访问系统后先检查本站会话；未登录时由 `/api/auth/login` 跳转第三方认证服务。认证服务
 回调携带 `code/state` 后，前端调用 `/api/auth/token`，FastAPI 使用服务端密钥
 兑换 Token 并写入 HttpOnly Cookie。生产环境必须使用 HTTPS，并设置
 `AUTH_COOKIE_SECURE=true`。
+
+登录后请求 `GET /api/current-user` 时，FastAPI 从 HttpOnly Cookie 读取 Access Token，
+通过 `backend/app/clients/` 请求第三方用户信息接口，只向浏览器返回用户、部门、角色和
+权限白名单字段。第三方拒绝 Token 时接口清除本站 Cookie 并返回 401；网络或响应契约失败
+统一返回 502。
 
 ## 验证
 

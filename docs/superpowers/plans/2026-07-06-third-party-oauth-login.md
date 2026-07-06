@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add JBM OAuth2 authorization-code login to GenStack while keeping the client secret and access token outside frontend JavaScript.
+**Goal:** Add third-party OAuth2 authorization-code login to GenStack while keeping the client secret and access token outside frontend JavaScript.
 
-**Architecture:** React uses an `AuthGate` to check the current HttpOnly-cookie session, exchange callback parameters through FastAPI, and redirect unauthenticated users to a backend login endpoint. FastAPI owns OAuth2 configuration, state validation, the JBM token request, response validation, and session-cookie creation.
+**Architecture:** React uses an `AuthGate` to check the current HttpOnly-cookie session, exchange callback parameters through FastAPI, and redirect unauthenticated users to a backend login endpoint. FastAPI owns OAuth2 configuration, state validation, the remote token request, response validation, and session-cookie creation.
 
 **Tech Stack:** FastAPI, pydantic-settings, httpx, pytest, React 19, TypeScript, TanStack Query, Vitest, Testing Library
 
@@ -13,7 +13,7 @@
 ## File map
 
 - Create `backend/app/api/auth.py`: OAuth2 login, token exchange, and session endpoints.
-- Create `backend/tests/test_auth.py`: backend authentication contract tests with mocked JBM transport.
+- Create `backend/tests/test_auth.py`: backend authentication contract tests with mocked remote transport.
 - Modify `backend/app/core/config.py`: typed OAuth2 and cookie settings.
 - Modify `backend/app/main.py`: register the authentication router.
 - Modify `backend/requirements.txt`: make `httpx` a runtime dependency.
@@ -149,7 +149,7 @@ def test_session_only_reports_cookie_presence() -> None:
 
 - [x] **Step 2: Write failing token-exchange tests**
 
-Cover missing/mismatched state, successful JBM response, HTTP failure, JBM `success: false`, and
+Cover missing/mismatched state, successful remote response, HTTP failure, remote `success: false`, and
 missing `access_token`. In the success handler, assert the outbound form contains:
 
 ```python
@@ -200,7 +200,7 @@ mock transport. `GET /login` must reject incomplete configuration with 503, gene
 `secrets.token_urlsafe(32)`, set a five-minute HttpOnly state Cookie, and return
 `RedirectResponse(status_code=302)`.
 
-`POST /token` must compare state using `secrets.compare_digest`, submit the form to JBM with an
+`POST /token` must compare state using `secrets.compare_digest`, submit the form to the remote service with an
 explicit timeout, validate the `ResultBody`, clamp invalid/non-positive `expires_in` to the
 configured default, set `genstack_session`, and clear `oauth_state`. Error responses must never
 echo the upstream body because it may contain sensitive authentication data.
@@ -397,14 +397,14 @@ deployments can use the root `.env` without enabling unrelated settings from tha
 
 - [x] **Step 2: Update architecture and runbooks**
 
-Document the three local endpoints, the JBM OAuth2 flow, exact redirect URI registration,
+Document the three local endpoints, the third-party OAuth2 flow, exact redirect URI registration,
 production HTTPS/Secure Cookie requirement, client-secret boundary, and the absence of refresh,
 logout, user synchronization, and authorization in this increment. Remove every statement that
 claims login is not implemented.
 
 - [x] **Step 3: Audit comments and documentation**
 
-Inspect the full diff. Keep comments explaining JBM's hidden `client_secret` requirement, fixed
+Inspect the full diff. Keep comments explaining the remote service's hidden `client_secret` requirement, fixed
 redirect URI, state validation, cookie lifetime, and redirect-loop prevention. Remove comments
 that still describe authentication as a placeholder.
 

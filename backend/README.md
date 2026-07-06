@@ -8,12 +8,17 @@
 认证接口：
 
 - `GET /api/auth/session`：返回当前浏览器是否已有登录 Cookie。
-- `GET /api/auth/login`：生成 `state` 并跳转 JBM 授权页。
+- `GET /api/auth/login`：生成 `state` 并跳转第三方认证服务授权页。
 - `POST /api/auth/token`：校验 `state`、在后端兑换 Token 并设置 HttpOnly Cookie。
+- `GET /api/current-user`：使用 Cookie 中的 Token 查询并过滤第三方当前用户。
 
-`OAUTH2_CLIENT_SECRET` 只能配置在后端环境。Token 接口使用 JBM 支持的
+`OAUTH2_CLIENT_SECRET` 只能配置在后端环境。Token 接口使用第三方认证服务支持的
 `POST application/x-www-form-urlencoded`，避免密钥进入 URL。当前不实现 Refresh
-Token、登出、用户同步或业务接口代理。
+Token、登出或用户同步。
+
+`app/clients/` 是远程业务访问边界：公共客户端统一添加 Bearer Header、设置超时并校验
+业务响应，领域客户端负责字段映射。`/api/current-user` 只返回白名单字段；远程 401/403
+会清除本站会话 Cookie，其他网络或契约失败统一映射为 502。
 
 本地测试：
 

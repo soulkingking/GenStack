@@ -1,6 +1,6 @@
 # Current User Client Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add `GET /api/current-user`, which uses the server-side session token to obtain and safely expose the current third-party user.
 
@@ -34,7 +34,7 @@
 - Modify: `.env.example`
 - Modify: `docker-compose.yml`
 
-- [ ] **Step 1: Add the failing configuration assertions**
+- [x] **Step 1: Add the failing configuration assertions**
 
 Add `OAUTH2_USERINFO_URL` to the environment test and assert both its empty default and environment override:
 
@@ -48,7 +48,7 @@ monkeypatch.setenv(
 assert settings.oauth2_userinfo_url == "https://auth.example/oauth2/userinfo"
 ```
 
-- [ ] **Step 2: Run the configuration test and verify failure**
+- [x] **Step 2: Run the configuration test and verify failure**
 
 Run:
 
@@ -58,7 +58,7 @@ Run:
 
 Expected: FAIL because `Settings.oauth2_userinfo_url` does not exist.
 
-- [ ] **Step 3: Add the typed setting and deployment wiring**
+- [x] **Step 3: Add the typed setting and deployment wiring**
 
 Add this field beside the other server-side OAuth2 endpoints:
 
@@ -78,7 +78,7 @@ Pass it to the application container:
 OAUTH2_USERINFO_URL: "${OAUTH2_USERINFO_URL:-}"
 ```
 
-- [ ] **Step 4: Run the configuration test**
+- [x] **Step 4: Run the configuration test**
 
 Run:
 
@@ -96,7 +96,7 @@ Expected: PASS.
 - Create: `backend/app/clients/user.py`
 - Create: `backend/tests/test_user_client.py`
 
-- [ ] **Step 1: Write failing client tests**
+- [x] **Step 1: Write failing client tests**
 
 Use `httpx.MockTransport` to verify that `UserClient.get_current_user("private-token")` sends:
 
@@ -127,7 +127,7 @@ CurrentUser(
 Add separate cases for HTTP 401/403, HTTP 500, transport failure, invalid JSON, business failure,
 and a non-object `result`.
 
-- [ ] **Step 2: Run client tests and verify failure**
+- [x] **Step 2: Run client tests and verify failure**
 
 Run:
 
@@ -137,7 +137,7 @@ Run:
 
 Expected: FAIL because `app.clients.user` does not exist.
 
-- [ ] **Step 3: Implement shared response validation**
+- [x] **Step 3: Implement shared response validation**
 
 Define these stable client exceptions:
 
@@ -166,7 +166,7 @@ isinstance(body.get("result"), dict)
 
 Logs may contain only the exception class or HTTP status.
 
-- [ ] **Step 4: Implement current-user allowlist mapping**
+- [x] **Step 4: Implement current-user allowlist mapping**
 
 Define `CurrentUser` with these fields:
 
@@ -187,7 +187,7 @@ role_permissions: list[str] = Field(default_factory=list)
 `roles`, `permissions`, `menuPermission`, and `rolePermission`. It does not copy the remote
 dictionary or expose unknown fields.
 
-- [ ] **Step 5: Run client tests**
+- [x] **Step 5: Run client tests**
 
 Run:
 
@@ -205,7 +205,7 @@ Expected: PASS.
 - Modify: `backend/app/main.py`
 - Create: `backend/tests/test_current_user.py`
 
-- [ ] **Step 1: Write failing route tests**
+- [x] **Step 1: Write failing route tests**
 
 Build an isolated FastAPI app and override the user-client dependency. Cover:
 
@@ -225,7 +225,7 @@ Also assert:
 - `RemoteAuthenticationError` returns 401 and expires `genstack_session`;
 - `RemoteServiceError` returns 502 without exposing exception content.
 
-- [ ] **Step 2: Run route tests and verify failure**
+- [x] **Step 2: Run route tests and verify failure**
 
 Run:
 
@@ -235,7 +235,7 @@ Run:
 
 Expected: FAIL because `app.api.current_user` does not exist.
 
-- [ ] **Step 3: Add the shared session dependency**
+- [x] **Step 3: Add the shared session dependency**
 
 Add this public dependency to `auth.py`:
 
@@ -250,7 +250,7 @@ def require_session_token(
     return session_token.strip()
 ```
 
-- [ ] **Step 4: Implement and register the route**
+- [x] **Step 4: Implement and register the route**
 
 Create an HTTP client dependency and a `UserClient` dependency. Implement:
 
@@ -271,7 +271,7 @@ creation. Translate other `RemoteClientError` values into a stable 502 response.
 
 Register `current_user.router` under `/api` in `app/main.py`.
 
-- [ ] **Step 5: Run route and regression tests**
+- [x] **Step 5: Run route and regression tests**
 
 Run:
 
@@ -292,24 +292,24 @@ Expected: PASS.
 - Modify: `docs/superpowers/specs/2026-07-06-third-party-oauth-login-design.md`
 - Modify: `docs/superpowers/plans/2026-07-06-third-party-oauth-login.md`
 
-- [ ] **Step 1: Replace provider-specific terminology**
+- [x] **Step 1: Replace provider-specific terminology**
 
 Use “第三方认证服务” or “远程服务” in code comments, logger messages, tests, and maintained
 documentation. Rename provider-specific test functions and fixtures so:
 
 ```bash
-rg -n "JBM|jbm" --glob '!CHANGELOG.md'
+git grep -n -i $'\x4a\x42\x4d'
 ```
 
 returns no matches.
 
-- [ ] **Step 2: Document the endpoint and client boundary**
+- [x] **Step 2: Document the endpoint and client boundary**
 
 Add `GET /api/current-user` to the public API list. Document that FastAPI reads the HttpOnly
 Cookie, passes the access token to `clients`, returns only allowlisted fields, clears the Cookie
 when the remote service rejects it, and maps remote availability or contract failures to 502.
 
-- [ ] **Step 3: Run all validation**
+- [x] **Step 3: Run all validation**
 
 Run:
 
@@ -322,7 +322,7 @@ git diff --check
 
 Expected: all commands pass.
 
-- [ ] **Step 4: Audit comments and docs**
+- [x] **Step 4: Audit comments and docs**
 
 Inspect the final diff and confirm that comments explain Bearer authentication, response
 allowlisting, Cookie cleanup, and stable error translation without narrating trivial syntax.

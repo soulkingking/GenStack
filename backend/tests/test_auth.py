@@ -31,7 +31,7 @@ async def _request(
     app.include_router(auth.router, prefix="/api")
 
     def default_handler(_: httpx.Request) -> httpx.Response:
-        raise AssertionError("测试未预期调用 JBM")
+        raise AssertionError("测试未预期调用第三方认证服务")
 
     upstream = httpx.AsyncClient(
         transport=httpx.MockTransport(upstream_handler or default_handler)
@@ -93,7 +93,7 @@ def test_session_only_reports_cookie_presence() -> None:
     assert anonymous.json() == {"authenticated": False}
 
 
-def test_token_exchange_rejects_mismatched_state_before_calling_jbm() -> None:
+def test_token_exchange_rejects_mismatched_state_before_calling_provider() -> None:
     response = asyncio.run(
         _request(
             "POST",
@@ -127,7 +127,7 @@ def test_token_exchange_uses_server_secret_and_sets_http_only_cookie() -> None:
                 "code": 200,
                 "success": True,
                 "result": {
-                    "access_token": "jbm-access-token",
+                    "access_token": "provider-access-token",
                     "refresh_token": "ignored-refresh-token",
                     "expires_in": 7200,
                 },
@@ -146,8 +146,8 @@ def test_token_exchange_uses_server_secret_and_sets_http_only_cookie() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"authenticated": True}
-    assert "jbm-access-token" not in response.text
-    assert response.cookies["genstack_session"] == "jbm-access-token"
+    assert "provider-access-token" not in response.text
+    assert response.cookies["genstack_session"] == "provider-access-token"
 
     cookies = response.headers.get_list("set-cookie")
     session_cookie = next(value for value in cookies if value.startswith("genstack_session="))
@@ -166,7 +166,7 @@ def test_token_exchange_uses_default_lifetime_for_invalid_expires_in() -> None:
                 "code": 200,
                 "success": True,
                 "result": {
-                    "access_token": "jbm-access-token",
+                    "access_token": "provider-access-token",
                     "expires_in": "invalid",
                 },
             },
@@ -190,7 +190,7 @@ def test_token_exchange_uses_default_lifetime_for_invalid_expires_in() -> None:
     assert "Max-Age=3600" in session_cookie
 
 
-def test_token_exchange_rejects_jbm_business_failure_without_leaking_body() -> None:
+def test_token_exchange_rejects_provider_business_failure_without_leaking_body() -> None:
     def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,

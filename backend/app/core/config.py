@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # OAuth2 客户端密钥只在后端使用；SecretStr 避免配置对象日志意外输出明文。
     oauth2_authorize_url: str = ""
     oauth2_token_url: str = ""
+    oauth2_userinfo_url: str = ""
     oauth2_client_id: str = ""
     oauth2_client_secret: SecretStr = SecretStr("")
     oauth2_redirect_uri: str = ""

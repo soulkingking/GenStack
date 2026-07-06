@@ -11,6 +11,7 @@ def _settings(**overrides) -> Settings:
 def test_defaults_keep_oauth_and_nacos_safe_for_local_development() -> None:
     settings = _settings()
 
+    assert settings.oauth2_userinfo_url == ""
     assert settings.oauth2_scope == ""
     assert settings.oauth2_state_ttl_seconds == 300
     assert settings.oauth2_default_session_ttl_seconds == 3600
@@ -26,6 +27,7 @@ def test_defaults_keep_oauth_and_nacos_safe_for_local_development() -> None:
 def test_environment_overrides_oauth_and_nacos(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OAUTH2_AUTHORIZE_URL", "https://auth.example/oauth2/authorize")
     monkeypatch.setenv("OAUTH2_TOKEN_URL", "https://auth.example/oauth2/token")
+    monkeypatch.setenv("OAUTH2_USERINFO_URL", "https://auth.example/oauth2/userinfo")
     monkeypatch.setenv("OAUTH2_CLIENT_ID", "genstack-client")
     monkeypatch.setenv("OAUTH2_CLIENT_SECRET", "server-secret")
     monkeypatch.setenv("OAUTH2_REDIRECT_URI", "https://app.example/")
@@ -39,6 +41,7 @@ def test_environment_overrides_oauth_and_nacos(monkeypatch: pytest.MonkeyPatch) 
 
     assert settings.oauth2_authorize_url == "https://auth.example/oauth2/authorize"
     assert settings.oauth2_token_url == "https://auth.example/oauth2/token"
+    assert settings.oauth2_userinfo_url == "https://auth.example/oauth2/userinfo"
     assert settings.oauth2_client_id == "genstack-client"
     assert settings.oauth2_client_secret.get_secret_value() == "server-secret"
     assert settings.oauth2_redirect_uri == "https://app.example/"

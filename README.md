@@ -9,13 +9,16 @@ GenStack 是一个采用 React 与 FastAPI 的最小全栈项目模板。它沿�
 - `GET /api/health`：API 存活检查
 - `GET /api/meta`：应用名称和版本
 - React 状态首页
+- JBM OAuth2 授权码登录（FastAPI 服务端换取 Token）
+- HttpOnly Cookie 登录会话与 OAuth2 `state` 校验
 - Vite 开发代理
 - FastAPI 同源静态资源托管（支持前端路由深链接回退到 index.html）
 - 可选 Nacos 服务注册：`NACOS_ENABLED=true` 时启动注册实例、关闭时注销
 - Docker Compose 单容器交付
 
-当前不包含登录接口、用户管理、API Key、ORM 或数据库迁移。认证账号
-（`AUTH_USERNAME`/`AUTH_PASSWORD`）与 `DATABASE_URL` 一样属于预留配置。
+当前不包含用户同步、权限模型、Token 刷新、主动登出、API Key、ORM 或数据库迁移。
+第三方 Access Token 只保存在后端设置的 HttpOnly Cookie 中，前端 JavaScript
+不能读取。
 
 ## 技术栈
 
@@ -108,6 +111,27 @@ node scripts/start-frontend.mjs
 
 访问 <http://127.0.0.1:5173>。后端固定使用
 <http://127.0.0.1:8000>，Vite 将 `/api` 代理到该端口。
+
+### 配置第三方登录
+
+在 JBM 注册 OAuth2 客户端，并把回调地址设置为与 `.env` 中
+`OAUTH2_REDIRECT_URI` 完全相同的值。本地默认回调地址为
+`http://127.0.0.1:5173/`。然后配置：
+
+```dotenv
+OAUTH2_AUTHORIZE_URL=http://127.0.0.1:5555/oauth2/authorize
+OAUTH2_TOKEN_URL=http://127.0.0.1:5555/oauth2/token
+OAUTH2_CLIENT_ID=your-client-id
+OAUTH2_CLIENT_SECRET=your-client-secret
+OAUTH2_REDIRECT_URI=http://127.0.0.1:5173/
+OAUTH2_SCOPE=all
+AUTH_COOKIE_SECURE=false
+```
+
+浏览器访问系统后先检查本站会话；未登录时由 `/api/auth/login` 跳转 JBM。JBM
+回调携带 `code/state` 后，前端调用 `/api/auth/token`，FastAPI 使用服务端密钥
+兑换 Token 并写入 HttpOnly Cookie。生产环境必须使用 HTTPS，并设置
+`AUTH_COOKIE_SECURE=true`。
 
 ## 验证
 

@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 始终从仓库根目录读取 .env 和 data，使本地运行与容器目录约定保持一致。
@@ -22,9 +23,16 @@ class Settings(BaseSettings):
     database_url: str = _DEFAULT_SQLITE_URL
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
-    # 预留认证账号：登录接口尚未实现，先与部署环境的配置约定保持一致。
-    auth_username: str = "admin"
-    auth_password: str = "admin"
+    # OAuth2 客户端密钥只在后端使用；SecretStr 避免配置对象日志意外输出明文。
+    oauth2_authorize_url: str = ""
+    oauth2_token_url: str = ""
+    oauth2_client_id: str = ""
+    oauth2_client_secret: SecretStr = SecretStr("")
+    oauth2_redirect_uri: str = ""
+    oauth2_scope: str = ""
+    oauth2_state_ttl_seconds: int = Field(default=300, gt=0)
+    oauth2_default_session_ttl_seconds: int = Field(default=3600, gt=0)
+    auth_cookie_secure: bool = False
 
     # Nacos 服务注册：默认关闭；启用后应用启动时注册实例、关闭时注销。
     nacos_enabled: bool = False
@@ -43,6 +51,21 @@ class Settings(BaseSettings):
         """返回供 CORS 中间件使用的已清理非空来源列表。"""
 
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def oauth2_configured(self) -> bool:
+        """返回第三方登录所需服务端配置是否完整。"""
+
+        return all(
+            value.strip()
+            for value in (
+                self.oauth2_authorize_url,
+                self.oauth2_token_url,
+                self.oauth2_client_id,
+                self.oauth2_client_secret.get_secret_value(),
+                self.oauth2_redirect_uri,
+            )
+        )
 
 
 @lru_cache

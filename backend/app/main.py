@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health
+from app.api import auth, health
 from app.core import nacos
 from app.core.config import get_settings
 from app.core.static import SpaStaticFiles
@@ -46,6 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(health.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 
 
 @app.get("/api/meta")
